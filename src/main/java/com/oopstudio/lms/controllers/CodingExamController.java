@@ -1,7 +1,9 @@
 package com.oopstudio.lms.controllers;
 
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,6 +39,17 @@ public class CodingExamController {
 						"CHALLENGE_NOT_FOUND",
 						"No coding challenge exists for id " + id + "."
 				)));
+	}
+
+	@GetMapping("/api/compiler/challenges")
+	public List<ChallengeSummary> fetchChallenges() {
+		return codingQuestionRepository.findAll(Sort.by(Sort.Direction.ASC, "id")).stream()
+				.map(question -> new ChallengeSummary(
+						question.getId(),
+						question.getTitle(),
+						question.getDifficulty().name()
+				))
+				.toList();
 	}
 
 	@PostMapping("/api/compiler/run")
@@ -107,6 +120,13 @@ public class CodingExamController {
 			Long id,
 			String title,
 			String description,
+			String difficulty
+	) {
+	}
+
+	public record ChallengeSummary(
+			Long id,
+			String title,
 			String difficulty
 	) {
 	}

@@ -303,9 +303,13 @@
 						<label for="teacherEmail">Email</label>
 						<input id="teacherEmail" name="email" type="email" maxlength="160" required>
 					</div>
+					<div class="field">
+						<label for="teacherPassword">Set Security Password</label>
+						<input id="teacherPassword" name="password" type="password" minlength="8" required>
+					</div>
 					<button id="teacherSubmit" class="action" type="submit">Register Instructor</button>
 				</form>
-				<div id="teacherStatus" class="status">A unique teacher ID and temporary password will be generated after registration.</div>
+				<div id="teacherStatus" class="status">A unique teacher ID will be generated after registration. Your selected password will be activated immediately.</div>
 			</article>
 		</section>
 	</main>
@@ -367,7 +371,7 @@
 			await submitForm(teacherForm, "/api/public/register/teacher", teacherSubmit, teacherStatus, (payload) => {
 				setStatus(
 					teacherStatus,
-					`Instructor created. Unique ID: ${payload.uniqueTeacherId}. Temporary password: ${payload.temporaryPassword}`,
+					`Instructor created. Unique Teacher ID: ${payload.uniqueTeacherId}. Custom password activated.`,
 					"good"
 				);
 				teacherForm.reset();

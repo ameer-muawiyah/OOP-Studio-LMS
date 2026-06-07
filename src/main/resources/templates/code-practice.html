@@ -196,6 +196,36 @@
 			gap: 10px;
 		}
 
+		.challenge-switcher {
+			display: grid;
+			gap: 8px;
+			margin-top: 4px;
+		}
+
+		.challenge-switcher label {
+			color: var(--muted);
+			font-size: 0.74rem;
+			font-weight: 900;
+			text-transform: uppercase;
+		}
+
+		.challenge-select {
+			width: 100%;
+			min-height: 44px;
+			padding: 0 12px;
+			border: 1px solid var(--line-strong);
+			border-radius: 8px;
+			outline: 0;
+			background: #101010;
+			color: var(--text);
+			font-weight: 800;
+		}
+
+		.challenge-select:focus {
+			border-color: var(--emerald);
+			box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
+		}
+
 		.kicker,
 		.label {
 			color: var(--emerald-bright);
@@ -608,6 +638,12 @@
 					<div class="kicker">Challenge Packet</div>
 					<h2 id="challengeTitle" class="problem-title">Loading practical prompt...</h2>
 					<div id="difficultyChip" class="difficulty-chip">Difficulty // Pending</div>
+					<div class="challenge-switcher">
+						<label for="challengeSelector">Switch Coding Task</label>
+						<select id="challengeSelector" class="challenge-select" disabled>
+							<option value="">Loading tasks...</option>
+						</select>
+					</div>
 				</div>
 
 				<p id="challengeDescription" class="problem-text">
@@ -654,7 +690,7 @@
 						<span id="consoleStatus" class="console-status">Idle</span>
 					</div>
 					<div id="consoleBody" class="console-body" aria-live="polite">
-						<p class="console-line">[system] Awaiting compiler challenge payload.</p>
+						<p class="console-line">Awaiting compiler challenge payload.</p>
 					</div>
 				</section>
 			</div>
@@ -662,16 +698,12 @@
 	</div>
 
 	<script>
-		const challengeId = new URLSearchParams(window.location.search).get("id") || "1";
-		const stubSource = `public class Solution {
-    public static String solve(String input) throws Exception {
-        // TODO: Parse input and return the correct result string.
-        return "";
-    }
-}`;
+		const requestedChallengeId = new URLSearchParams(window.location.search).get("id");
+		let activeChallengeId = null;
 
 		const dom = {
 			workspaceStatus: document.getElementById("workspaceStatus"),
+			challengeSelector: document.getElementById("challengeSelector"),
 			challengeTitle: document.getElementById("challengeTitle"),
 			challengeDescription: document.getElementById("challengeDescription"),
 			difficultyChip: document.getElementById("difficultyChip"),
@@ -684,30 +716,79 @@
 		};
 
 		document.addEventListener("DOMContentLoaded", initializeWorkspace);
+		dom.challengeSelector.addEventListener("change", () => loadChallenge(dom.challengeSelector.value, true));
 		dom.executeButton.addEventListener("click", executeSuite);
 		dom.sourceEditor.addEventListener("input", updateLineRail);
 
 		async function initializeWorkspace() {
-			dom.sourceEditor.value = stubSource;
-			updateLineRail();
-			setBusy(true, "Loading Challenge");
-
 			try {
-				const response = await fetch(`/api/compiler/challenge/${encodeURIComponent(challengeId)}`);
-				const payload = await readJson(response);
-				if (!response.ok) {
-					throw new Error(payload.message || "Challenge lookup failed.");
-				}
-
-				renderChallenge(payload);
-				writeConsoleLine("[system] Challenge loaded. Compiler workspace ready.");
-				setValidation("Workspace ready.", "good");
-				setBusy(false, "Ready");
+				setBusy(true, "Loading Challenge");
+				const challenges = await loadChallengeDirectory();
+				const selectedChallengeId = chooseInitialChallengeId(challenges);
+				await loadChallenge(selectedChallengeId, true);
 			} catch (error) {
 				setValidation(error.message, "bad");
-				writeConsoleLine(`[error] ${error.message}`);
+				writeConsoleLine(`Error: ${error.message}`);
 				setBusy(true, "Unavailable");
 			}
+		}
+
+		async function loadChallengeDirectory() {
+			const response = await fetch("/api/compiler/challenges", { headers: { "Accept": "application/json" } });
+			const challenges = await readJson(response);
+			if (!response.ok) {
+				throw new Error("Challenge directory lookup failed.");
+			}
+			if (!Array.isArray(challenges) || challenges.length === 0) {
+				throw new Error("No coding challenges are available.");
+			}
+
+			dom.challengeSelector.replaceChildren();
+			challenges.forEach((challenge) => {
+				const option = document.createElement("option");
+				option.value = String(challenge.id);
+				option.textContent = `${challenge.title} // ${challenge.difficulty}`;
+				dom.challengeSelector.appendChild(option);
+			});
+			dom.challengeSelector.disabled = false;
+			return challenges;
+		}
+
+		function chooseInitialChallengeId(challenges) {
+			if (requestedChallengeId && challenges.some((challenge) => String(challenge.id) === requestedChallengeId)) {
+				return requestedChallengeId;
+			}
+
+			return String(challenges[0].id);
+		}
+
+		async function loadChallenge(challengeId, replaceEditor) {
+			if (!challengeId) {
+				return;
+			}
+
+			setBusy(true, "Loading Challenge");
+			clearConsole();
+			writeConsoleLine("Loading selected challenge.");
+
+			const response = await fetch(`/api/compiler/challenge/${encodeURIComponent(challengeId)}`);
+			const payload = await readJson(response);
+			if (!response.ok) {
+				throw new Error(payload.message || "Challenge lookup failed.");
+			}
+
+			activeChallengeId = String(payload.id);
+			dom.challengeSelector.value = activeChallengeId;
+			renderChallenge(payload);
+			if (replaceEditor) {
+				dom.sourceEditor.value = buildStarterSource(payload);
+				updateLineRail();
+			}
+
+			clearConsole();
+			writeConsoleLine("Challenge loaded. Compiler workspace ready.");
+			setValidation("Workspace ready.", "good");
+			setBusy(false, "Ready");
 		}
 
 		async function executeSuite() {
@@ -720,7 +801,7 @@
 			setBusy(true, "Executing");
 			setValidation("Compiler engine running hidden verification suite.", "");
 			clearConsole();
-			writeConsoleLine("[system] Dispatching source to local JavaCompiler service...");
+			writeConsoleLine("Dispatching source to local JavaCompiler service.");
 
 			try {
 				const response = await fetch("/api/compiler/run", {
@@ -729,7 +810,7 @@
 						"Content-Type": "application/json"
 					},
 					body: JSON.stringify({
-						questionId: challengeId,
+						questionId: activeChallengeId,
 						studentSourceCode: source
 					})
 				});
@@ -745,7 +826,7 @@
 				setBusy(false, status);
 			} catch (error) {
 				setValidation(error.message, "bad");
-				writeConsoleLine(`[error] ${error.message}`);
+				writeConsoleLine(`Error: ${error.message}`);
 				setBusy(false, "Error");
 			}
 		}
@@ -762,7 +843,7 @@
 			if (!result.compilationSucceeded) {
 				dom.consoleStatus.textContent = "Compilation Failed";
 				setValidation("Compilation failed. Review compiler diagnostics.", "bad");
-				writeConsoleLine("[compile] JavaCompiler rejected the submission.");
+				writeConsoleLine("JavaCompiler rejected the submission.");
 				renderDiagnostics(result.compilerDiagnostics);
 				return;
 			}
@@ -770,14 +851,14 @@
 			dom.consoleStatus.textContent = `${result.passedTests}/${result.totalTests} Passed`;
 			if (result.passedTests === result.totalTests) {
 				setValidation("All hidden verification checkpoints passed.", "good");
-				writeConsoleLine(`[suite] PASS ${result.passedTests}/${result.totalTests}`);
+				writeConsoleLine(`Suite passed ${result.passedTests}/${result.totalTests}.`);
 			} else {
 				setValidation("Some verification checkpoints failed.", "bad");
-				writeConsoleLine(`[suite] FAIL ${result.passedTests}/${result.totalTests}`);
+				writeConsoleLine(`Suite requires review ${result.passedTests}/${result.totalTests}.`);
 			}
 
 			if (result.runtimeError) {
-				writeConsoleLine(`[runtime] ${result.runtimeError}`);
+				writeConsoleLine(`Runtime: ${result.runtimeError}`);
 			}
 
 			result.testResults.forEach(renderTestCaseResult);
@@ -785,11 +866,11 @@
 
 		function renderDiagnostics(diagnostics) {
 			if (!diagnostics || diagnostics.length === 0) {
-				writeConsoleLine("[compile] No diagnostic details were returned.");
+				writeConsoleLine("No diagnostic details were returned.");
 				return;
 			}
 
-			diagnostics.forEach((diagnostic) => writeConsoleLine(`[diagnostic] ${diagnostic}`));
+			diagnostics.forEach((diagnostic) => writeConsoleLine(`Diagnostic: ${diagnostic}`));
 		}
 
 		function renderTestCaseResult(testResult) {
@@ -823,11 +904,30 @@
 			if (testResult.errorMessage) {
 				const errorLine = document.createElement("p");
 				errorLine.className = "console-line";
-				errorLine.textContent = `[error] ${testResult.errorMessage}`;
+				errorLine.textContent = `Error: ${testResult.errorMessage}`;
 				card.appendChild(errorLine);
 			}
 
 			dom.consoleBody.appendChild(card);
+		}
+
+		function buildStarterSource(challenge) {
+			const title = (challenge.title || "").toLowerCase();
+			if (title.includes("reverse")) {
+				return `public class Solution {
+    public static String solve(String input) throws Exception {
+        String value = input;
+        return "";
+    }
+}`;
+			}
+
+			return `public class Solution {
+    public static String solve(String input) throws Exception {
+        int n = Integer.parseInt(input.trim());
+        return "";
+    }
+}`;
 		}
 
 		function updateLineRail() {

@@ -19,7 +19,6 @@ import com.oopstudio.lms.repositories.UserRepository;
 @RestController
 public class RegistrationController {
 
-	private static final String PASSWORD_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
 	private final UserRepository userRepository;
@@ -48,11 +47,13 @@ public class RegistrationController {
 	public ResponseEntity<?> registerTeacher(
 			@RequestParam String firstName,
 			@RequestParam String lastName,
-			@RequestParam String email
+			@RequestParam String email,
+			@RequestParam String password
 	) {
 		String normalizedFirstName = normalizeName(firstName, "firstName");
 		String normalizedLastName = normalizeName(lastName, "lastName");
 		String normalizedEmail = normalizeEmail(email);
+		String normalizedPassword = normalizePassword(password);
 
 		if (userRepository.existsByEmail(normalizedEmail)) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(
@@ -62,7 +63,6 @@ public class RegistrationController {
 		}
 
 		String teacherId = generateUniqueTeacherId();
-		String temporaryPassword = generateTemporaryPassword();
 
 		User teacher = new User();
 		teacher.setFirstName(normalizedFirstName);
@@ -70,15 +70,14 @@ public class RegistrationController {
 		teacher.setEmail(normalizedEmail);
 		teacher.setUniqueTeacherId(teacherId);
 		teacher.setUsername(teacherId);
-		teacher.setPassword(passwordEncoder.encode(temporaryPassword));
+		teacher.setPassword(passwordEncoder.encode(normalizedPassword));
 		teacher.setRole(User.Role.TEACHER);
 
 		User savedTeacher = userRepository.save(teacher);
 		return ResponseEntity.status(HttpStatus.CREATED).body(new TeacherRegistrationResponse(
 				savedTeacher.getId(),
 				savedTeacher.getUniqueTeacherId(),
-				temporaryPassword,
-				"Teacher account created. Store the generated ID and temporary password securely."
+				"Teacher account created. Store the generated ID securely. The custom security password is active."
 		));
 	}
 
@@ -144,15 +143,6 @@ public class RegistrationController {
 		throw new IllegalStateException("Unable to generate a unique teacher ID.");
 	}
 
-	private String generateTemporaryPassword() {
-		StringBuilder password = new StringBuilder(12);
-		for (int index = 0; index < 12; index++) {
-			password.append(PASSWORD_ALPHABET.charAt(SECURE_RANDOM.nextInt(PASSWORD_ALPHABET.length())));
-		}
-
-		return password.toString();
-	}
-
 	private String normalizeName(String value, String fieldName) {
 		if (value == null || value.isBlank()) {
 			throw new IllegalArgumentException(fieldName + " is required.");
@@ -193,7 +183,6 @@ public class RegistrationController {
 	public record TeacherRegistrationResponse(
 			Long id,
 			String uniqueTeacherId,
-			String temporaryPassword,
 			String message
 	) {
 	}

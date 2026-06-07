@@ -334,16 +334,6 @@
 				#101010;
 		}
 
-		.code-block::before {
-			content: "QUESTION_TEXT";
-			display: block;
-			margin-bottom: 14px;
-			color: var(--emerald-bright);
-			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
-			font-size: 0.78rem;
-			font-weight: 900;
-		}
-
 		.question-text {
 			margin: 0;
 			font-size: clamp(1.22rem, 2.4vw, 1.95rem);
@@ -696,7 +686,7 @@
 			<section id="questionCard" class="question-card" aria-live="polite">
 				<div class="meta-row">
 					<div id="difficultyChip" class="status-chip">Difficulty // MEDIUM</div>
-					<div id="topicChip" class="status-chip">Topic // Loading</div>
+					<div id="topicChip" class="status-chip">Topic // Ready</div>
 				</div>
 
 				<div class="code-block">
@@ -708,22 +698,22 @@
 						<label class="option-block" data-option-card>
 							<input type="radio" name="selectedOption" value="A">
 							<span class="option-key">A</span>
-							<span id="optionA" class="option-text">Loading option A</span>
+							<span id="optionA" class="option-text">Option A</span>
 						</label>
 						<label class="option-block" data-option-card>
 							<input type="radio" name="selectedOption" value="B">
 							<span class="option-key">B</span>
-							<span id="optionB" class="option-text">Loading option B</span>
+							<span id="optionB" class="option-text">Option B</span>
 						</label>
 						<label class="option-block" data-option-card>
 							<input type="radio" name="selectedOption" value="C">
 							<span class="option-key">C</span>
-							<span id="optionC" class="option-text">Loading option C</span>
+							<span id="optionC" class="option-text">Option C</span>
 						</label>
 						<label class="option-block" data-option-card>
 							<input type="radio" name="selectedOption" value="D">
 							<span class="option-key">D</span>
-							<span id="optionD" class="option-text">Loading option D</span>
+							<span id="optionD" class="option-text">Option D</span>
 						</label>
 					</div>
 
@@ -745,7 +735,7 @@
 				</div>
 				<div class="metric">
 					<span>Last Signal</span>
-					<strong id="lastSignal">Awaiting</strong>
+					<strong id="lastSignal">Ready</strong>
 				</div>
 				<div id="feedback" class="feedback">Preparing your adaptive session.</div>
 			</aside>

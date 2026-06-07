@@ -93,6 +93,36 @@
 			box-shadow: 0 0 18px rgba(16, 185, 129, 0.86);
 		}
 
+		.header-actions {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			flex-wrap: wrap;
+			justify-content: flex-end;
+		}
+
+		.sign-out-link {
+			min-height: 36px;
+			display: inline-flex;
+			align-items: center;
+			padding: 8px 12px;
+			border: 1px solid var(--line-strong);
+			border-radius: 8px;
+			background: #101010;
+			color: var(--muted);
+			font-size: 0.8rem;
+			font-weight: 900;
+			text-decoration: none;
+			text-transform: uppercase;
+			transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+		}
+
+		.sign-out-link:hover {
+			border-color: var(--emerald);
+			background: var(--emerald-soft);
+			color: var(--emerald-bright);
+		}
+
 		.stats-grid {
 			display: grid;
 			grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -230,6 +260,10 @@
 				width: fit-content;
 			}
 
+			.header-actions {
+				justify-content: flex-start;
+			}
+
 			.stats-grid {
 				grid-template-columns: 1fr;
 			}
@@ -243,7 +277,10 @@
 				<h1>Professor Command Center</h1>
 				<p th:text="'Supervisor matrix for ' + ${teacherName}">Supervisor matrix for instructor.</p>
 			</div>
-			<div class="live-chip">Assigned Students Only</div>
+			<div class="header-actions">
+				<div class="live-chip">Assigned Students Only</div>
+				<a class="sign-out-link" href="/logout">Sign Out</a>
+			</div>
 		</header>
 
 		<section class="stats-grid" aria-label="Class performance statistics">

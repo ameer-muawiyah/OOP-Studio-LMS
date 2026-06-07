@@ -62,6 +62,16 @@ WHERE NOT EXISTS (
 	SELECT 1 FROM coding_questions WHERE title = 'Implement a Factorial Method'
 );
 
+INSERT INTO coding_questions (title, description, difficulty, test_cases_json)
+SELECT
+	'Implement a String Reversal Method',
+	'Write a Solution class with a public static String solve(String input) method. The input contains one string value. Return the characters in reverse order exactly as a string. The hidden suite validates short words, mixed characters, and spacing behavior.',
+	'EASY',
+	'[{"input":"hello","expected":"olleh"},{"input":"OOP","expected":"POO"},{"input":"Java 25","expected":"52 avaJ"},{"input":"racecar","expected":"racecar"}]'
+WHERE NOT EXISTS (
+	SELECT 1 FROM coding_questions WHERE title = 'Implement a String Reversal Method'
+);
+
 SET @student_name_column_exists := (
 	SELECT COUNT(*)
 	FROM information_schema.columns

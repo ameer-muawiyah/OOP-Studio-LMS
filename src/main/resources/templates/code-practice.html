@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OOP Studio // Code Runner Workspace</title>
+	<style>
+		:root {
+			color-scheme: dark;
+			--bg: #0d0d0d;
+			--panel: #1a1a1a;
+			--panel-soft: #141414;
+			--terminal: #0a0a0a;
+			--line: #2d2d2d;
+			--line-strong: #3d3d3d;
+			--text: #f3f6f4;
+			--muted: #9ca3af;
+			--emerald: #10b981;
+			--emerald-bright: #34d399;
+			--emerald-soft: rgba(16, 185, 129, 0.13);
+			--red: #fb7185;
+			--red-soft: rgba(251, 113, 133, 0.12);
+			--amber: #fbbf24;
+			--shadow: 0 28px 90px rgba(0, 0, 0, 0.5);
+			font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			min-height: 100vh;
+			margin: 0;
+			background:
+				linear-gradient(135deg, rgba(16, 185, 129, 0.08), transparent 30%),
+				linear-gradient(180deg, #121212 0%, var(--bg) 58%, #070707 100%);
+			color: var(--text);
+		}
+
+		button,
+		textarea {
+			font: inherit;
+		}
+
+		.portal-sidebar {
+			position: fixed;
+			inset: 16px auto 16px 16px;
+			z-index: 20;
+			width: 240px;
+			padding: 18px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: rgba(26, 26, 26, 0.94);
+			box-shadow: var(--shadow);
+			display: flex;
+			flex-direction: column;
+			gap: 22px;
+			backdrop-filter: blur(16px);
+		}
+
+		.portal-brand {
+			display: grid;
+			gap: 6px;
+			padding-bottom: 16px;
+			border-bottom: 1px solid var(--line);
+		}
+
+		.portal-brand strong {
+			color: var(--text);
+			font-size: 1rem;
+			line-height: 1.2;
+		}
+
+		.portal-brand span {
+			color: var(--emerald-bright);
+			font-size: 0.72rem;
+			font-weight: 900;
+			text-transform: uppercase;
+		}
+
+		.portal-nav {
+			display: grid;
+			gap: 10px;
+		}
+
+		.portal-link {
+			min-height: 44px;
+			padding: 11px 12px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: #101010;
+			color: var(--muted);
+			font-weight: 850;
+			text-decoration: none;
+			transition: border-color 160ms ease, color 160ms ease, background 160ms ease, transform 160ms ease;
+		}
+
+		.portal-link:hover,
+		.portal-link.active {
+			transform: translateX(2px);
+			border-color: var(--emerald);
+			background: var(--emerald-soft);
+			color: var(--emerald-bright);
+		}
+
+		.workspace-shell {
+			width: min(1340px, calc(100vw - 32px));
+			min-height: 100vh;
+			margin: 0 auto;
+			padding: 24px 0 42px;
+			display: grid;
+			grid-template-rows: auto minmax(0, 1fr);
+			gap: 20px;
+		}
+
+		.topbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+			padding: 16px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: rgba(26, 26, 26, 0.9);
+			box-shadow: var(--shadow);
+		}
+
+		.brand {
+			display: grid;
+			gap: 5px;
+			min-width: 0;
+		}
+
+		.brand h1 {
+			margin: 0;
+			font-size: clamp(1.3rem, 2.4vw, 2rem);
+			line-height: 1.1;
+			font-weight: 850;
+			letter-spacing: 0;
+		}
+
+		.brand p {
+			margin: 0;
+			color: var(--muted);
+			font-size: 0.94rem;
+		}
+
+		.status-card {
+			min-width: 238px;
+			padding: 14px;
+			border: 1px solid rgba(16, 185, 129, 0.58);
+			border-radius: 8px;
+			background: linear-gradient(180deg, rgba(16, 185, 129, 0.14), rgba(20, 20, 20, 0.98));
+			display: grid;
+			gap: 8px;
+		}
+
+		.status-card span {
+			color: var(--muted);
+			font-size: 0.76rem;
+			font-weight: 850;
+			text-transform: uppercase;
+		}
+
+		.status-card strong {
+			font-size: 1.2rem;
+			overflow-wrap: anywhere;
+		}
+
+		.main-grid {
+			display: grid;
+			grid-template-columns: minmax(290px, 0.78fr) minmax(0, 1.22fr);
+			gap: 20px;
+			align-items: stretch;
+		}
+
+		.problem-pane,
+		.ide-pane,
+		.console-pane {
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: rgba(26, 26, 26, 0.96);
+			box-shadow: var(--shadow);
+		}
+
+		.problem-pane {
+			padding: 22px;
+			display: grid;
+			gap: 20px;
+			align-content: start;
+		}
+
+		.problem-header {
+			display: grid;
+			gap: 10px;
+		}
+
+		.kicker,
+		.label {
+			color: var(--emerald-bright);
+			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+			font-size: 0.76rem;
+			font-weight: 900;
+			text-transform: uppercase;
+		}
+
+		.problem-title {
+			margin: 0;
+			font-size: clamp(1.6rem, 3vw, 2.45rem);
+			line-height: 1.1;
+			letter-spacing: 0;
+		}
+
+		.difficulty-chip {
+			width: fit-content;
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 7px 11px;
+			border: 1px solid rgba(16, 185, 129, 0.5);
+			border-radius: 8px;
+			background: var(--emerald-soft);
+			color: var(--emerald-bright);
+			font-size: 0.78rem;
+			font-weight: 850;
+			text-transform: uppercase;
+		}
+
+		.difficulty-chip::before {
+			content: "";
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: var(--emerald);
+			box-shadow: 0 0 16px rgba(16, 185, 129, 0.8);
+		}
+
+		.problem-text,
+		.rule-list {
+			margin: 0;
+			color: #d1d5db;
+			font-size: 1rem;
+			line-height: 1.65;
+		}
+
+		.rule-box {
+			padding: 16px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: #111111;
+			display: grid;
+			gap: 10px;
+		}
+
+		.rule-list {
+			padding-left: 18px;
+		}
+
+		.rule-list li + li {
+			margin-top: 8px;
+		}
+
+		.ide-stack {
+			min-width: 0;
+			display: grid;
+			grid-template-rows: minmax(440px, 1fr) auto;
+			gap: 20px;
+		}
+
+		.ide-pane {
+			overflow: hidden;
+			display: grid;
+			grid-template-rows: auto minmax(0, 1fr) auto;
+		}
+
+		.ide-toolbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			padding: 12px 14px;
+			border-bottom: 1px solid var(--line);
+			background: #111111;
+		}
+
+		.file-pill {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			color: var(--muted);
+			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+			font-size: 0.82rem;
+			font-weight: 850;
+		}
+
+		.file-pill::before {
+			content: "";
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: var(--emerald);
+			box-shadow: 0 0 16px rgba(16, 185, 129, 0.7);
+		}
+
+		.execute-button {
+			min-height: 40px;
+			padding: 0 18px;
+			border: 1px solid var(--emerald);
+			border-radius: 8px;
+			background: linear-gradient(90deg, var(--emerald), var(--emerald-bright));
+			color: #04130d;
+			font-weight: 900;
+			cursor: pointer;
+			box-shadow: 0 14px 34px rgba(16, 185, 129, 0.2);
+			transition: transform 160ms ease, opacity 160ms ease;
+		}
+
+		.execute-button:hover:not(:disabled) {
+			transform: translateY(-1px);
+		}
+
+		.execute-button:disabled {
+			cursor: not-allowed;
+			opacity: 0.58;
+		}
+
+		.editor-frame {
+			min-height: 0;
+			display: grid;
+			grid-template-columns: 54px minmax(0, 1fr);
+			background: #0f0f0f;
+		}
+
+		.line-rail {
+			padding: 18px 10px;
+			border-right: 1px solid var(--line);
+			color: #6b7280;
+			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+			font-size: 0.92rem;
+			line-height: 1.6;
+			text-align: right;
+			user-select: none;
+			white-space: pre-line;
+		}
+
+		.code-editor {
+			width: 100%;
+			min-height: 100%;
+			padding: 18px;
+			border: 0;
+			outline: 0;
+			resize: none;
+			background: transparent;
+			color: #f8fafc;
+			caret-color: var(--emerald-bright);
+			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+			font-size: 0.96rem;
+			line-height: 1.6;
+			tab-size: 4;
+		}
+
+		.validation {
+			min-height: 44px;
+			padding: 11px 14px;
+			border-top: 1px solid var(--line);
+			color: var(--muted);
+			font-size: 0.9rem;
+			font-weight: 760;
+			background: #111111;
+		}
+
+		.validation.warn {
+			color: var(--amber);
+		}
+
+		.validation.bad {
+			color: var(--red);
+		}
+
+		.console-pane {
+			background: var(--terminal);
+			overflow: hidden;
+		}
+
+		.console-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			padding: 12px 14px;
+			border-bottom: 1px solid var(--line);
+			background: #101010;
+		}
+
+		.console-header strong {
+			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+			font-size: 0.86rem;
+			text-transform: uppercase;
+		}
+
+		.console-status {
+			color: var(--muted);
+			font-size: 0.82rem;
+			font-weight: 850;
+		}
+
+		.console-body {
+			min-height: 190px;
+			max-height: 340px;
+			padding: 16px;
+			overflow: auto;
+			display: grid;
+			gap: 12px;
+		}
+
+		.console-line {
+			margin: 0;
+			color: #d1d5db;
+			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+			font-size: 0.88rem;
+			line-height: 1.5;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+		}
+
+		.result-card {
+			padding: 13px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: #111111;
+			display: grid;
+			gap: 8px;
+		}
+
+		.result-card.pass {
+			border-color: rgba(16, 185, 129, 0.64);
+			background: rgba(16, 185, 129, 0.09);
+		}
+
+		.result-card.fail {
+			border-color: rgba(251, 113, 133, 0.64);
+			background: var(--red-soft);
+		}
+
+		.result-head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			flex-wrap: wrap;
+		}
+
+		.badge {
+			display: inline-flex;
+			align-items: center;
+			min-height: 26px;
+			padding: 4px 9px;
+			border: 1px solid var(--line-strong);
+			border-radius: 999px;
+			color: var(--muted);
+			font-size: 0.74rem;
+			font-weight: 900;
+			text-transform: uppercase;
+		}
+
+		.badge.pass {
+			border-color: rgba(16, 185, 129, 0.72);
+			color: var(--emerald-bright);
+		}
+
+		.badge.fail {
+			border-color: rgba(251, 113, 133, 0.72);
+			color: var(--red);
+		}
+
+		.badge.warn {
+			border-color: rgba(251, 191, 36, 0.72);
+			color: var(--amber);
+		}
+
+		.matrix {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 8px;
+		}
+
+		.matrix-cell {
+			padding: 10px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: #0d0d0d;
+			min-width: 0;
+		}
+
+		.matrix-cell span {
+			display: block;
+			margin-bottom: 5px;
+			color: var(--muted);
+			font-size: 0.72rem;
+			font-weight: 850;
+			text-transform: uppercase;
+		}
+
+		.matrix-cell code {
+			color: #e5e7eb;
+			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+			font-size: 0.82rem;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+		}
+
+		.hidden {
+			display: none !important;
+		}
+
+		@media (min-width: 981px) {
+			.workspace-shell {
+				width: min(1340px, calc(100vw - 320px));
+				margin-left: 288px;
+				margin-right: 32px;
+			}
+		}
+
+		@media (max-width: 980px) {
+			.portal-sidebar {
+				position: static;
+				width: min(100vw - 20px, 680px);
+				margin: 10px auto 0;
+			}
+
+			.main-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.ide-stack {
+				grid-template-rows: auto auto;
+			}
+		}
+
+		@media (max-width: 680px) {
+			.workspace-shell {
+				width: min(100vw - 20px, 1340px);
+				padding-top: 10px;
+			}
+
+			.topbar,
+			.ide-toolbar,
+			.console-header {
+				align-items: stretch;
+				flex-direction: column;
+			}
+
+			.status-card {
+				min-width: 0;
+			}
+
+			.editor-frame {
+				grid-template-columns: 1fr;
+			}
+
+			.line-rail {
+				display: none;
+			}
+
+			.code-editor {
+				min-height: 420px;
+			}
+
+			.execute-button {
+				width: 100%;
+			}
+
+			.matrix {
+				grid-template-columns: 1fr;
+			}
+		}
+	</style>
+</head>
+<body>
+	<nav class="portal-sidebar" aria-label="Student portal navigation">
+		<div class="portal-brand">
+			<strong>OOP Studio LMS</strong>
+			<span>Student Portal</span>
+		</div>
+		<div class="portal-nav">
+			<a class="portal-link" href="/practice">Adaptive MCQs</a>
+			<a class="portal-link active" href="/code-practice">Code Playground</a>
+			<a class="portal-link" href="/logout">Sign Out</a>
+		</div>
+	</nav>
+
+	<div class="workspace-shell">
+		<header class="topbar">
+			<div class="brand">
+				<h1>OOP Studio // Code Runner Workspace</h1>
+				<p>Practical Java examiner connected to the local compiler engine.</p>
+			</div>
+			<aside class="status-card" aria-label="Execution status">
+				<span>Compiler Status</span>
+				<strong id="workspaceStatus">Loading Challenge</strong>
+			</aside>
+		</header>
+
+		<main class="main-grid">
+			<section class="problem-pane">
+				<div class="problem-header">
+					<div class="kicker">Challenge Packet</div>
+					<h2 id="challengeTitle" class="problem-title">Loading practical prompt...</h2>
+					<div id="difficultyChip" class="difficulty-chip">Difficulty // Pending</div>
+				</div>
+
+				<p id="challengeDescription" class="problem-text">
+					The compiler workspace is requesting the current problem definition.
+				</p>
+
+				<div class="rule-box">
+					<div class="label">Submission Contract</div>
+					<ul class="rule-list">
+						<li>Keep the class name as <strong>Solution</strong>.</li>
+						<li>Implement <strong>public static String solve(String input)</strong>.</li>
+						<li>Return the exact output string expected by the hidden test suite.</li>
+					</ul>
+				</div>
+
+				<div class="rule-box">
+					<div class="label">Runtime Envelope</div>
+					<ul class="rule-list">
+						<li>Each test case is capped at two seconds.</li>
+						<li>Compilation diagnostics are returned directly from the JDK compiler.</li>
+						<li>Timeouts and runtime exceptions are surfaced in the terminal matrix.</li>
+					</ul>
+				</div>
+			</section>
+
+			<div class="ide-stack">
+				<section class="ide-pane">
+					<div class="ide-toolbar">
+						<div class="file-pill">Solution.java</div>
+						<button id="executeButton" class="execute-button" type="button" disabled>Execute Suite</button>
+					</div>
+
+					<div class="editor-frame">
+						<pre id="lineRail" class="line-rail" aria-hidden="true">1</pre>
+						<textarea id="sourceEditor" class="code-editor" spellcheck="false"></textarea>
+					</div>
+
+					<div id="validationMessage" class="validation">Workspace initializing.</div>
+				</section>
+
+				<section class="console-pane">
+					<div class="console-header">
+						<strong>Execution Console</strong>
+						<span id="consoleStatus" class="console-status">Idle</span>
+					</div>
+					<div id="consoleBody" class="console-body" aria-live="polite">
+						<p class="console-line">[system] Awaiting compiler challenge payload.</p>
+					</div>
+				</section>
+			</div>
+		</main>
+	</div>
+
+	<script>
+		const challengeId = new URLSearchParams(window.location.search).get("id") || "1";
+		const stubSource = `public class Solution {
+    public static String solve(String input) throws Exception {
+        // TODO: Parse input and return the correct result string.
+        return "";
+    }
+}`;
+
+		const dom = {
+			workspaceStatus: document.getElementById("workspaceStatus"),
+			challengeTitle: document.getElementById("challengeTitle"),
+			challengeDescription: document.getElementById("challengeDescription"),
+			difficultyChip: document.getElementById("difficultyChip"),
+			executeButton: document.getElementById("executeButton"),
+			sourceEditor: document.getElementById("sourceEditor"),
+			lineRail: document.getElementById("lineRail"),
+			validationMessage: document.getElementById("validationMessage"),
+			consoleStatus: document.getElementById("consoleStatus"),
+			consoleBody: document.getElementById("consoleBody")
+		};
+
+		document.addEventListener("DOMContentLoaded", initializeWorkspace);
+		dom.executeButton.addEventListener("click", executeSuite);
+		dom.sourceEditor.addEventListener("input", updateLineRail);
+
+		async function initializeWorkspace() {
+			dom.sourceEditor.value = stubSource;
+			updateLineRail();
+			setBusy(true, "Loading Challenge");
+
+			try {
+				const response = await fetch(`/api/compiler/challenge/${encodeURIComponent(challengeId)}`);
+				const payload = await readJson(response);
+				if (!response.ok) {
+					throw new Error(payload.message || "Challenge lookup failed.");
+				}
+
+				renderChallenge(payload);
+				writeConsoleLine("[system] Challenge loaded. Compiler workspace ready.");
+				setValidation("Workspace ready.", "good");
+				setBusy(false, "Ready");
+			} catch (error) {
+				setValidation(error.message, "bad");
+				writeConsoleLine(`[error] ${error.message}`);
+				setBusy(true, "Unavailable");
+			}
+		}
+
+		async function executeSuite() {
+			const source = dom.sourceEditor.value;
+			if (!source || source.trim().length === 0) {
+				setValidation("Source code cannot be blank.", "warn");
+				return;
+			}
+
+			setBusy(true, "Executing");
+			setValidation("Compiler engine running hidden verification suite.", "");
+			clearConsole();
+			writeConsoleLine("[system] Dispatching source to local JavaCompiler service...");
+
+			try {
+				const response = await fetch("/api/compiler/run", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						questionId: challengeId,
+						studentSourceCode: source
+					})
+				});
+				const payload = await readJson(response);
+				if (!response.ok) {
+					throw new Error(payload.message || "Execution request failed.");
+				}
+
+				renderExecutionResult(payload.result);
+				const status = payload.result.compilationSucceeded && payload.result.passedTests === payload.result.totalTests
+						? "Suite Passed"
+						: "Review Output";
+				setBusy(false, status);
+			} catch (error) {
+				setValidation(error.message, "bad");
+				writeConsoleLine(`[error] ${error.message}`);
+				setBusy(false, "Error");
+			}
+		}
+
+		function renderChallenge(challenge) {
+			dom.challengeTitle.textContent = challenge.title;
+			dom.challengeDescription.textContent = challenge.description;
+			dom.difficultyChip.textContent = `Difficulty // ${challenge.difficulty}`;
+		}
+
+		function renderExecutionResult(result) {
+			clearConsole();
+
+			if (!result.compilationSucceeded) {
+				dom.consoleStatus.textContent = "Compilation Failed";
+				setValidation("Compilation failed. Review compiler diagnostics.", "bad");
+				writeConsoleLine("[compile] JavaCompiler rejected the submission.");
+				renderDiagnostics(result.compilerDiagnostics);
+				return;
+			}
+
+			dom.consoleStatus.textContent = `${result.passedTests}/${result.totalTests} Passed`;
+			if (result.passedTests === result.totalTests) {
+				setValidation("All hidden verification checkpoints passed.", "good");
+				writeConsoleLine(`[suite] PASS ${result.passedTests}/${result.totalTests}`);
+			} else {
+				setValidation("Some verification checkpoints failed.", "bad");
+				writeConsoleLine(`[suite] FAIL ${result.passedTests}/${result.totalTests}`);
+			}
+
+			if (result.runtimeError) {
+				writeConsoleLine(`[runtime] ${result.runtimeError}`);
+			}
+
+			result.testResults.forEach(renderTestCaseResult);
+		}
+
+		function renderDiagnostics(diagnostics) {
+			if (!diagnostics || diagnostics.length === 0) {
+				writeConsoleLine("[compile] No diagnostic details were returned.");
+				return;
+			}
+
+			diagnostics.forEach((diagnostic) => writeConsoleLine(`[diagnostic] ${diagnostic}`));
+		}
+
+		function renderTestCaseResult(testResult) {
+			const card = document.createElement("article");
+			card.className = `result-card ${testResult.passed ? "pass" : "fail"}`;
+
+			const statusLabel = testResult.timedOut ? "Timeout" : (testResult.passed ? "Passed" : "Failed");
+			const badgeTone = testResult.timedOut ? "warn" : (testResult.passed ? "pass" : "fail");
+
+			card.innerHTML = `
+				<div class="result-head">
+					<strong>Checkpoint ${escapeHtml(String(testResult.testNumber))}</strong>
+					<span class="badge ${badgeTone}">${escapeHtml(statusLabel)}</span>
+				</div>
+				<div class="matrix">
+					<div class="matrix-cell">
+						<span>Input</span>
+						<code>${escapeHtml(testResult.input ?? "")}</code>
+					</div>
+					<div class="matrix-cell">
+						<span>Expected</span>
+						<code>${escapeHtml(testResult.expectedOutput ?? "")}</code>
+					</div>
+					<div class="matrix-cell">
+						<span>Actual</span>
+						<code>${escapeHtml(testResult.actualOutput ?? "")}</code>
+					</div>
+				</div>
+			`;
+
+			if (testResult.errorMessage) {
+				const errorLine = document.createElement("p");
+				errorLine.className = "console-line";
+				errorLine.textContent = `[error] ${testResult.errorMessage}`;
+				card.appendChild(errorLine);
+			}
+
+			dom.consoleBody.appendChild(card);
+		}
+
+		function updateLineRail() {
+			const lineCount = Math.max(dom.sourceEditor.value.split("\n").length, 1);
+			dom.lineRail.textContent = Array.from({ length: lineCount }, (_, index) => index + 1).join("\n");
+		}
+
+		function clearConsole() {
+			dom.consoleBody.replaceChildren();
+		}
+
+		function writeConsoleLine(message) {
+			const line = document.createElement("p");
+			line.className = "console-line";
+			line.textContent = message;
+			dom.consoleBody.appendChild(line);
+			dom.consoleBody.scrollTop = dom.consoleBody.scrollHeight;
+		}
+
+		function setBusy(isBusy, label) {
+			dom.executeButton.disabled = isBusy;
+			dom.sourceEditor.disabled = isBusy;
+			dom.workspaceStatus.textContent = label;
+			dom.consoleStatus.textContent = label;
+		}
+
+		function setValidation(message, tone) {
+			dom.validationMessage.textContent = message;
+			dom.validationMessage.classList.remove("warn", "bad");
+			if (tone === "warn" || tone === "bad") {
+				dom.validationMessage.classList.add(tone);
+			}
+		}
+
+		function escapeHtml(value) {
+			return value
+					.replaceAll("&", "&amp;")
+					.replaceAll("<", "&lt;")
+					.replaceAll(">", "&gt;")
+					.replaceAll('"', "&quot;")
+					.replaceAll("'", "&#039;");
+		}
+
+		async function readJson(response) {
+			const text = await response.text();
+			return text ? JSON.parse(text) : {};
+		}
+	</script>
+</body>
+</html>

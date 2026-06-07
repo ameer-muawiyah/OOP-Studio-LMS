@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OOP Studio // Adaptive Practice Panel</title>
+	<style>
+		:root {
+			color-scheme: dark;
+			--bg: #0d0d0d;
+			--panel: #1a1a1a;
+			--panel-soft: #141414;
+			--panel-raised: #202020;
+			--line: #2d2d2d;
+			--line-strong: #3b3b3b;
+			--text: #f4f7f5;
+			--muted: #9ca3af;
+			--emerald: #10b981;
+			--emerald-bright: #34d399;
+			--emerald-soft: rgba(16, 185, 129, 0.14);
+			--danger: #fb7185;
+			--warning: #fbbf24;
+			--shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
+			font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			min-height: 100vh;
+			margin: 0;
+			background:
+				linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent 32%),
+				linear-gradient(180deg, #111111 0%, var(--bg) 54%, #080808 100%);
+			color: var(--text);
+		}
+
+		button,
+		input {
+			font: inherit;
+		}
+
+		.portal-sidebar {
+			position: fixed;
+			inset: 16px auto 16px 16px;
+			z-index: 20;
+			width: 240px;
+			padding: 18px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: rgba(26, 26, 26, 0.94);
+			box-shadow: var(--shadow);
+			display: flex;
+			flex-direction: column;
+			gap: 22px;
+			backdrop-filter: blur(16px);
+		}
+
+		.portal-brand {
+			display: grid;
+			gap: 6px;
+			padding-bottom: 16px;
+			border-bottom: 1px solid var(--line);
+		}
+
+		.portal-brand strong {
+			color: var(--text);
+			font-size: 1rem;
+			line-height: 1.2;
+		}
+
+		.portal-brand span {
+			color: var(--emerald-bright);
+			font-size: 0.72rem;
+			font-weight: 900;
+			text-transform: uppercase;
+		}
+
+		.portal-nav {
+			display: grid;
+			gap: 10px;
+		}
+
+		.portal-link {
+			min-height: 44px;
+			padding: 11px 12px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: #101010;
+			color: var(--muted);
+			font-weight: 850;
+			text-decoration: none;
+			transition: border-color 160ms ease, color 160ms ease, background 160ms ease, transform 160ms ease;
+		}
+
+		.portal-link:hover,
+		.portal-link.active {
+			transform: translateX(2px);
+			border-color: var(--emerald);
+			background: var(--emerald-soft);
+			color: var(--emerald-bright);
+		}
+
+		.registration-view {
+			min-height: 100vh;
+			width: min(720px, calc(100vw - 32px));
+			margin: 0 auto;
+			display: grid;
+			place-items: center;
+			padding: 32px 0;
+		}
+
+		.registration-card {
+			width: 100%;
+			padding: clamp(24px, 5vw, 44px);
+			border: 1px solid rgba(16, 185, 129, 0.58);
+			border-radius: 8px;
+			background: rgba(26, 26, 26, 0.94);
+			box-shadow: var(--shadow);
+			display: grid;
+			gap: 20px;
+		}
+
+		.registration-card h1 {
+			margin: 0;
+			font-size: clamp(1.8rem, 4vw, 3rem);
+			line-height: 1.08;
+			letter-spacing: 0;
+		}
+
+		.registration-card p {
+			margin: 0;
+			color: var(--muted);
+			line-height: 1.6;
+		}
+
+		.name-field {
+			display: grid;
+			gap: 8px;
+		}
+
+		.name-field label {
+			color: var(--emerald-bright);
+			font-size: 0.78rem;
+			font-weight: 900;
+			text-transform: uppercase;
+		}
+
+		.name-input {
+			width: 100%;
+			min-height: 54px;
+			padding: 0 16px;
+			border: 1px solid var(--line-strong);
+			border-radius: 8px;
+			outline: 0;
+			background: #101010;
+			color: var(--text);
+			font-size: 1.05rem;
+			transition: border-color 160ms ease, box-shadow 160ms ease;
+		}
+
+		.name-input:focus {
+			border-color: var(--emerald);
+			box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
+		}
+
+		.start-button {
+			min-height: 52px;
+			border: 1px solid var(--emerald);
+			border-radius: 8px;
+			background: linear-gradient(90deg, var(--emerald), var(--emerald-bright));
+			color: #03130d;
+			font-weight: 900;
+			cursor: pointer;
+			box-shadow: 0 16px 38px rgba(16, 185, 129, 0.2);
+		}
+
+		.start-button:disabled {
+			cursor: not-allowed;
+			opacity: 0.58;
+		}
+
+		.registration-error {
+			min-height: 22px;
+			color: var(--warning);
+			font-weight: 800;
+		}
+
+		.page-shell {
+			width: min(1180px, calc(100vw - 32px));
+			min-height: 100vh;
+			margin: 0 auto;
+			padding: 28px 0 48px;
+			display: flex;
+			flex-direction: column;
+			gap: 24px;
+		}
+
+		.header {
+			display: flex;
+			align-items: stretch;
+			justify-content: space-between;
+			gap: 16px;
+			padding: 16px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: rgba(26, 26, 26, 0.86);
+			box-shadow: var(--shadow);
+			backdrop-filter: blur(16px);
+		}
+
+		.brand {
+			display: grid;
+			align-content: center;
+			gap: 6px;
+			min-width: 0;
+		}
+
+		.brand h1 {
+			margin: 0;
+			font-size: clamp(1.3rem, 2.6vw, 2.1rem);
+			line-height: 1.1;
+			font-weight: 850;
+			letter-spacing: 0;
+		}
+
+		.brand p {
+			margin: 0;
+			color: var(--muted);
+			font-size: 0.94rem;
+		}
+
+		.counter-card {
+			min-width: 240px;
+			padding: 16px;
+			border: 1px solid rgba(16, 185, 129, 0.64);
+			border-radius: 8px;
+			background: linear-gradient(180deg, rgba(16, 185, 129, 0.16), rgba(20, 20, 20, 0.98));
+			display: grid;
+			gap: 10px;
+		}
+
+		.counter-card span {
+			color: var(--muted);
+			font-size: 0.75rem;
+			font-weight: 800;
+			text-transform: uppercase;
+		}
+
+		.counter-card strong {
+			font-size: 1.65rem;
+			line-height: 1;
+		}
+
+		.progress-track {
+			height: 8px;
+			border: 1px solid rgba(16, 185, 129, 0.32);
+			border-radius: 999px;
+			background: #090909;
+			overflow: hidden;
+		}
+
+		.progress-bar {
+			width: 0;
+			height: 100%;
+			border-radius: inherit;
+			background: linear-gradient(90deg, var(--emerald), var(--emerald-bright));
+			box-shadow: 0 0 22px rgba(16, 185, 129, 0.42);
+			transition: width 240ms ease;
+		}
+
+		.layout-grid {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) 320px;
+			gap: 20px;
+			align-items: start;
+		}
+
+		.question-card,
+		.results-view,
+		.telemetry-panel {
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: rgba(26, 26, 26, 0.96);
+			box-shadow: var(--shadow);
+		}
+
+		.question-card {
+			padding: clamp(20px, 3vw, 34px);
+			display: grid;
+			gap: 22px;
+		}
+
+		.meta-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			flex-wrap: wrap;
+		}
+
+		.status-chip {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			min-height: 34px;
+			padding: 7px 11px;
+			border: 1px solid var(--line-strong);
+			border-radius: 8px;
+			background: #101010;
+			color: var(--muted);
+			font-size: 0.78rem;
+			font-weight: 850;
+			text-transform: uppercase;
+		}
+
+		.status-chip::before {
+			content: "";
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: var(--emerald);
+			box-shadow: 0 0 16px rgba(16, 185, 129, 0.9);
+		}
+
+		.code-block {
+			padding: clamp(20px, 3vw, 30px);
+			border: 1px solid var(--line-strong);
+			border-radius: 8px;
+			background:
+				linear-gradient(90deg, rgba(16, 185, 129, 0.08), transparent 28%),
+				#101010;
+		}
+
+		.code-block::before {
+			content: "QUESTION_TEXT";
+			display: block;
+			margin-bottom: 14px;
+			color: var(--emerald-bright);
+			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+			font-size: 0.78rem;
+			font-weight: 900;
+		}
+
+		.question-text {
+			margin: 0;
+			font-size: clamp(1.22rem, 2.4vw, 1.95rem);
+			line-height: 1.45;
+			font-weight: 800;
+			letter-spacing: 0;
+			overflow-wrap: anywhere;
+		}
+
+		.options-grid {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 14px;
+		}
+
+		.option-block {
+			position: relative;
+			min-height: 98px;
+			padding: 16px 16px 16px 58px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: var(--panel-soft);
+			cursor: pointer;
+			transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+		}
+
+		.option-block:hover {
+			transform: translateY(-2px);
+			border-color: rgba(16, 185, 129, 0.44);
+			background: var(--panel-raised);
+		}
+
+		.option-block input {
+			position: absolute;
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		.option-key {
+			position: absolute;
+			top: 16px;
+			left: 16px;
+			width: 30px;
+			height: 30px;
+			display: grid;
+			place-items: center;
+			border: 1px solid var(--line-strong);
+			border-radius: 6px;
+			background: #0b0b0b;
+			color: var(--muted);
+			font-weight: 900;
+		}
+
+		.option-text {
+			display: block;
+			color: #e5e7eb;
+			font-size: 1rem;
+			line-height: 1.45;
+			overflow-wrap: anywhere;
+		}
+
+		.option-block.selected {
+			border-color: var(--emerald);
+			background: var(--emerald-soft);
+			box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.18), 0 16px 42px rgba(0, 0, 0, 0.32);
+		}
+
+		.option-block.selected .option-key {
+			border-color: var(--emerald);
+			background: var(--emerald);
+			color: #03130d;
+		}
+
+		.action-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+			flex-wrap: wrap;
+		}
+
+		.validation-message {
+			min-height: 22px;
+			color: var(--warning);
+			font-size: 0.92rem;
+			font-weight: 760;
+		}
+
+		.submit-button,
+		.restart-button {
+			min-height: 50px;
+			padding: 0 24px;
+			border: 1px solid var(--emerald);
+			border-radius: 8px;
+			background: linear-gradient(90deg, var(--emerald), var(--emerald-bright));
+			color: #03130d;
+			font-weight: 900;
+			cursor: pointer;
+			box-shadow: 0 16px 38px rgba(16, 185, 129, 0.2);
+			transition: transform 160ms ease, opacity 160ms ease;
+		}
+
+		.submit-button:hover:not(:disabled),
+		.restart-button:hover {
+			transform: translateY(-2px);
+		}
+
+		.submit-button:disabled {
+			cursor: not-allowed;
+			opacity: 0.56;
+		}
+
+		.telemetry-panel {
+			padding: 20px;
+			display: grid;
+			gap: 18px;
+		}
+
+		.metric {
+			display: grid;
+			gap: 6px;
+			padding-bottom: 16px;
+			border-bottom: 1px solid var(--line);
+		}
+
+		.metric:last-of-type {
+			padding-bottom: 0;
+			border-bottom: 0;
+		}
+
+		.metric span {
+			color: var(--muted);
+			font-size: 0.76rem;
+			font-weight: 850;
+			text-transform: uppercase;
+		}
+
+		.metric strong {
+			font-size: 1.35rem;
+			line-height: 1.15;
+			overflow-wrap: anywhere;
+		}
+
+		.feedback {
+			min-height: 28px;
+			color: var(--muted);
+			font-weight: 760;
+			line-height: 1.35;
+		}
+
+		.feedback.good {
+			color: var(--emerald-bright);
+		}
+
+		.feedback.bad {
+			color: var(--danger);
+		}
+
+		.results-view {
+			display: none;
+			grid-column: 1 / -1;
+			padding: clamp(24px, 4vw, 44px);
+			text-align: center;
+		}
+
+		.results-view.visible {
+			display: grid;
+			gap: 22px;
+		}
+
+		.results-view h2 {
+			margin: 0;
+			font-size: clamp(1.65rem, 3vw, 2.7rem);
+			line-height: 1.15;
+			letter-spacing: 0;
+		}
+
+		.score-lockup {
+			display: grid;
+			gap: 8px;
+			justify-items: center;
+		}
+
+		.score-lockup strong {
+			color: var(--emerald-bright);
+			font-size: clamp(3rem, 8vw, 6rem);
+			line-height: 1;
+			text-shadow: 0 0 30px rgba(16, 185, 129, 0.32);
+		}
+
+		.score-lockup span {
+			color: var(--muted);
+			font-weight: 850;
+			text-transform: uppercase;
+		}
+
+		.results-grid {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 12px;
+		}
+
+		.result-tile {
+			padding: 16px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: #101010;
+		}
+
+		.result-tile span {
+			display: block;
+			margin-bottom: 8px;
+			color: var(--muted);
+			font-size: 0.76rem;
+			font-weight: 850;
+			text-transform: uppercase;
+		}
+
+		.result-tile strong {
+			font-size: 1.25rem;
+			overflow-wrap: anywhere;
+		}
+
+		.hidden {
+			display: none !important;
+		}
+
+		@media (min-width: 981px) {
+			.registration-view {
+				width: min(720px, calc(100vw - 320px));
+				margin-left: 288px;
+				margin-right: 32px;
+			}
+
+			.page-shell {
+				width: min(1180px, calc(100vw - 320px));
+				margin-left: 288px;
+				margin-right: 32px;
+			}
+		}
+
+		@media (max-width: 980px) {
+			.portal-sidebar {
+				position: static;
+				width: min(100vw - 20px, 680px);
+				margin: 10px auto 0;
+			}
+
+			.registration-view {
+				width: min(100vw - 20px, 720px);
+				min-height: calc(100vh - 170px);
+			}
+
+			.page-shell {
+				width: min(100vw - 20px, 1180px);
+			}
+		}
+
+		@media (max-width: 900px) {
+			.layout-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.telemetry-panel {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+
+			.metric {
+				padding-bottom: 0;
+				border-bottom: 0;
+			}
+
+			.feedback {
+				grid-column: 1 / -1;
+			}
+		}
+
+		@media (max-width: 680px) {
+			.portal-sidebar {
+				position: static;
+				width: min(100vw - 20px, 680px);
+				margin: 10px auto 0;
+			}
+
+			.page-shell {
+				width: min(100vw - 20px, 1180px);
+				padding-top: 10px;
+			}
+
+			.registration-view {
+				width: min(100vw - 20px, 720px);
+				min-height: calc(100vh - 170px);
+				padding-top: 18px;
+			}
+
+			.header {
+				flex-direction: column;
+			}
+
+			.counter-card {
+				min-width: 0;
+			}
+
+			.options-grid,
+			.telemetry-panel,
+			.results-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.action-row {
+				align-items: stretch;
+			}
+
+			.submit-button,
+			.restart-button {
+				width: 100%;
+			}
+		}
+	</style>
+</head>
+<body>
+	<nav class="portal-sidebar" aria-label="Student portal navigation">
+		<div class="portal-brand">
+			<strong>OOP Studio LMS</strong>
+			<span>Student Portal</span>
+		</div>
+		<div class="portal-nav">
+			<a class="portal-link active" href="/practice">Adaptive MCQs</a>
+			<a class="portal-link" href="/code-practice">Code Playground</a>
+			<a class="portal-link" href="/logout">Sign Out</a>
+		</div>
+	</nav>
+
+	<section id="registrationView" class="registration-view">
+		<div class="registration-card">
+			<div>
+				<h1>Enter Your Name to Begin Practice</h1>
+				<p>Your name is stored with the final adaptive score when the exam session completes.</p>
+			</div>
+			<div class="name-field">
+				<label for="studentNameInput">Student Name</label>
+				<input id="studentNameInput" class="name-input" type="text" maxlength="120" autocomplete="name" placeholder="e.g., Ayesha Khan">
+			</div>
+			<button id="startPracticeButton" class="start-button" type="button">Start Practice</button>
+			<div id="registrationError" class="registration-error" role="status"></div>
+		</div>
+	</section>
+
+	<div id="practiceShell" class="page-shell hidden">
+		<header class="header">
+			<div class="brand">
+				<h1>OOP Studio // Adaptive Practice Panel</h1>
+				<p>Quantum Developer training interface for adaptive OOP multiple-choice practice.</p>
+			</div>
+			<aside class="counter-card" aria-label="Question counter">
+				<span>Question Counter</span>
+				<strong><span id="answeredCount">0</span>/<span id="maxQuestions">9</span></strong>
+				<div class="progress-track" aria-hidden="true">
+					<div id="progressBar" class="progress-bar"></div>
+				</div>
+			</aside>
+		</header>
+
+		<main class="layout-grid">
+			<section id="questionCard" class="question-card" aria-live="polite">
+				<div class="meta-row">
+					<div id="difficultyChip" class="status-chip">Difficulty // MEDIUM</div>
+					<div id="topicChip" class="status-chip">Topic // Loading</div>
+				</div>
+
+				<div class="code-block">
+					<p id="questionText" class="question-text">Initializing adaptive question stream...</p>
+				</div>
+
+				<form id="answerForm">
+					<div class="options-grid">
+						<label class="option-block" data-option-card>
+							<input type="radio" name="selectedOption" value="A">
+							<span class="option-key">A</span>
+							<span id="optionA" class="option-text">Loading option A</span>
+						</label>
+						<label class="option-block" data-option-card>
+							<input type="radio" name="selectedOption" value="B">
+							<span class="option-key">B</span>
+							<span id="optionB" class="option-text">Loading option B</span>
+						</label>
+						<label class="option-block" data-option-card>
+							<input type="radio" name="selectedOption" value="C">
+							<span class="option-key">C</span>
+							<span id="optionC" class="option-text">Loading option C</span>
+						</label>
+						<label class="option-block" data-option-card>
+							<input type="radio" name="selectedOption" value="D">
+							<span class="option-key">D</span>
+							<span id="optionD" class="option-text">Loading option D</span>
+						</label>
+					</div>
+
+					<div class="action-row">
+						<div id="validationMessage" class="validation-message" role="status"></div>
+						<button id="submitButton" class="submit-button" type="submit" disabled>Submit &amp; Advance</button>
+					</div>
+				</form>
+			</section>
+
+			<aside class="telemetry-panel">
+				<div class="metric">
+					<span>Score</span>
+					<strong id="scoreMetric">0</strong>
+				</div>
+				<div class="metric">
+					<span>Adaptive State</span>
+					<strong id="stateMetric">Booting</strong>
+				</div>
+				<div class="metric">
+					<span>Last Signal</span>
+					<strong id="lastSignal">Awaiting</strong>
+				</div>
+				<div id="feedback" class="feedback">Preparing your adaptive session.</div>
+			</aside>
+
+			<section id="resultsView" class="results-view" aria-live="polite">
+				<h2>Adaptive Session Complete</h2>
+				<div class="score-lockup">
+					<strong><span id="finalScore">0</span>/<span id="finalMax">9</span></strong>
+					<span id="finalMessage">Performance analytics ready.</span>
+				</div>
+				<div class="results-grid">
+					<div class="result-tile">
+						<span>Accuracy</span>
+						<strong id="accuracyMetric">0%</strong>
+					</div>
+					<div class="result-tile">
+						<span>Answered</span>
+						<strong id="answeredMetric">0</strong>
+					</div>
+					<div class="result-tile">
+						<span>Final Difficulty</span>
+						<strong id="finalDifficulty">N/A</strong>
+					</div>
+				</div>
+				<button id="restartButton" class="restart-button" type="button">Restart Practice</button>
+			</section>
+		</main>
+	</div>
+
+	<script>
+		const sessionState = {
+			activeQuestionId: null,
+			maxQuestions: 9,
+			busy: false,
+			completed: false,
+			studentName: ""
+		};
+
+		const dom = {
+			registrationView: document.getElementById("registrationView"),
+			practiceShell: document.getElementById("practiceShell"),
+			studentNameInput: document.getElementById("studentNameInput"),
+			startPracticeButton: document.getElementById("startPracticeButton"),
+			registrationError: document.getElementById("registrationError"),
+			questionCard: document.getElementById("questionCard"),
+			resultsView: document.getElementById("resultsView"),
+			answerForm: document.getElementById("answerForm"),
+			submitButton: document.getElementById("submitButton"),
+			restartButton: document.getElementById("restartButton"),
+			validationMessage: document.getElementById("validationMessage"),
+			feedback: document.getElementById("feedback"),
+			questionText: document.getElementById("questionText"),
+			optionA: document.getElementById("optionA"),
+			optionB: document.getElementById("optionB"),
+			optionC: document.getElementById("optionC"),
+			optionD: document.getElementById("optionD"),
+			difficultyChip: document.getElementById("difficultyChip"),
+			topicChip: document.getElementById("topicChip"),
+			answeredCount: document.getElementById("answeredCount"),
+			maxQuestions: document.getElementById("maxQuestions"),
+			progressBar: document.getElementById("progressBar"),
+			scoreMetric: document.getElementById("scoreMetric"),
+			stateMetric: document.getElementById("stateMetric"),
+			lastSignal: document.getElementById("lastSignal"),
+			finalScore: document.getElementById("finalScore"),
+			finalMax: document.getElementById("finalMax"),
+			finalMessage: document.getElementById("finalMessage"),
+			accuracyMetric: document.getElementById("accuracyMetric"),
+			answeredMetric: document.getElementById("answeredMetric"),
+			finalDifficulty: document.getElementById("finalDifficulty"),
+			optionCards: Array.from(document.querySelectorAll("[data-option-card]"))
+		};
+
+		document.addEventListener("DOMContentLoaded", initializeRegistration);
+		dom.startPracticeButton.addEventListener("click", startExam);
+		dom.studentNameInput.addEventListener("keydown", (event) => {
+			if (event.key === "Enter") {
+				event.preventDefault();
+				startExam();
+			}
+		});
+		dom.answerForm.addEventListener("submit", submitAnswer);
+		dom.restartButton.addEventListener("click", showRegistration);
+		dom.optionCards.forEach((card) => {
+			const input = card.querySelector("input[type='radio']");
+			card.addEventListener("click", () => selectOption(card));
+			input.addEventListener("change", () => selectOption(card));
+		});
+
+		function initializeRegistration() {
+			dom.studentNameInput.focus();
+		}
+
+		async function startExam() {
+			const studentName = dom.studentNameInput.value.trim();
+			if (!studentName) {
+				dom.registrationError.textContent = "Enter your name before starting.";
+				dom.studentNameInput.focus();
+				return;
+			}
+
+			sessionState.studentName = studentName;
+			setRegistrationBusy(true);
+			setBusy(true, "Starting");
+			sessionState.completed = false;
+			sessionState.activeQuestionId = null;
+
+			try {
+				const params = new URLSearchParams({ studentName });
+				const response = await fetch(`/api/exam/start?${params.toString()}`, { method: "GET" });
+				const payload = await readJson(response);
+				if (!response.ok) {
+					throw new Error(payload.message || "Unable to start the exam.");
+				}
+
+				hideRegistrationAndShowPractice();
+				showQuestionView();
+				if (payload.completed || !payload.question) {
+					renderUnavailableState(payload);
+					return;
+				}
+
+				sessionState.maxQuestions = payload.maxQuestions || 9;
+				renderQuestion(payload.question, payload);
+				renderProgress(payload.score, payload.answeredCount, payload.maxQuestions);
+				setFeedback("Adaptive session initialized.", "good");
+			} catch (error) {
+				dom.registrationError.textContent = error.message;
+				dom.practiceShell.classList.add("hidden");
+				dom.registrationView.classList.remove("hidden");
+			} finally {
+				setRegistrationBusy(false);
+				if (!sessionState.completed) {
+					setBusy(false, "Active");
+				}
+			}
+		}
+
+		async function submitAnswer(event) {
+			event.preventDefault();
+			if (sessionState.busy || sessionState.completed) {
+				return;
+			}
+
+			const selectedOption = document.querySelector("input[name='selectedOption']:checked");
+			if (!selectedOption) {
+				dom.validationMessage.textContent = "Select an option before submitting.";
+				return;
+			}
+
+			setBusy(true, "Submitting");
+			try {
+				const body = new URLSearchParams({
+					questionId: String(sessionState.activeQuestionId),
+					selectedOption: selectedOption.value
+				});
+
+				const response = await fetch("/api/exam/submit", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded"
+					},
+					body
+				});
+				const payload = await readJson(response);
+
+				if (!response.ok) {
+					throw new Error(payload.message || "Submission failed.");
+				}
+
+				renderProgress(payload.score, payload.answeredCount, payload.maxQuestions);
+				dom.lastSignal.textContent = payload.correct ? "Correct" : "Incorrect";
+				setFeedback(
+					payload.correct ? "Correct. Difficulty pressure increased." : "Incorrect. Difficulty pressure reduced.",
+					payload.correct ? "good" : "bad"
+				);
+
+				if (payload.completed || !payload.nextQuestion) {
+					await renderResults(payload);
+					return;
+				}
+
+				renderQuestion(payload.nextQuestion, payload);
+			} catch (error) {
+				dom.validationMessage.textContent = error.message;
+				setFeedback("The answer could not be submitted.", "bad");
+			} finally {
+				if (!sessionState.completed) {
+					setBusy(false, "Active");
+				}
+			}
+		}
+
+		function renderQuestion(question, payload) {
+			sessionState.activeQuestionId = question.id;
+			dom.questionText.textContent = question.questionText;
+			dom.optionA.textContent = question.optionA;
+			dom.optionB.textContent = question.optionB;
+			dom.optionC.textContent = question.optionC;
+			dom.optionD.textContent = question.optionD;
+			dom.difficultyChip.textContent = `Difficulty // ${question.difficulty || payload.currentDifficulty || "MEDIUM"}`;
+			dom.topicChip.textContent = `Topic // ${question.topicTag || "general"}`;
+			dom.stateMetric.textContent = payload.currentDifficulty || question.difficulty || "Active";
+			dom.lastSignal.textContent = "Ready";
+			clearSelection();
+		}
+
+		function renderProgress(score = 0, answeredCount = 0, maxQuestions = sessionState.maxQuestions) {
+			const safeMax = Math.max(Number(maxQuestions) || sessionState.maxQuestions, 1);
+			const safeAnswered = Math.max(Number(answeredCount) || 0, 0);
+			sessionState.maxQuestions = safeMax;
+			dom.scoreMetric.textContent = String(Number(score) || 0);
+			dom.answeredCount.textContent = String(safeAnswered);
+			dom.maxQuestions.textContent = String(safeMax);
+			dom.progressBar.style.width = `${Math.min(100, Math.round((safeAnswered / safeMax) * 100))}%`;
+		}
+
+		async function renderResults(lastPayload) {
+			let results = null;
+			try {
+				const response = await fetch("/api/exam/results", { method: "GET" });
+				results = await readJson(response);
+			} catch {
+				results = null;
+			}
+
+			const score = results?.score ?? lastPayload.score ?? 0;
+			const answered = results?.answeredCount ?? lastPayload.answeredCount ?? 0;
+			const max = results?.maxQuestions ?? lastPayload.maxQuestions ?? sessionState.maxQuestions;
+			const accuracy = results?.accuracyPercent ?? (answered === 0 ? 0 : Math.round((score * 10000) / answered) / 100);
+			const difficulty = results?.currentDifficulty ?? lastPayload.currentDifficulty ?? "N/A";
+
+			sessionState.completed = true;
+			sessionState.activeQuestionId = null;
+			dom.questionCard.classList.add("hidden");
+			dom.resultsView.classList.add("visible");
+			dom.finalScore.textContent = String(score);
+			dom.finalMax.textContent = String(max);
+			dom.finalMessage.textContent = lastPayload.completionReason || "Session complete";
+			dom.accuracyMetric.textContent = `${accuracy}%`;
+			dom.answeredMetric.textContent = `${answered}/${max}`;
+			dom.finalDifficulty.textContent = difficulty;
+			dom.stateMetric.textContent = "Complete";
+			renderProgress(score, answered, max);
+			setFeedback("Final results rendered.", "good");
+		}
+
+		function renderUnavailableState(payload) {
+			sessionState.completed = true;
+			dom.questionCard.classList.add("hidden");
+			dom.resultsView.classList.add("visible");
+			dom.finalScore.textContent = "0";
+			dom.finalMax.textContent = String(payload.maxQuestions || sessionState.maxQuestions);
+			dom.finalMessage.textContent = payload.message || "Question pool unavailable";
+			dom.accuracyMetric.textContent = "0%";
+			dom.answeredMetric.textContent = "0";
+			dom.finalDifficulty.textContent = payload.currentDifficulty || "MEDIUM";
+			dom.stateMetric.textContent = "Unavailable";
+			setFeedback(payload.message || "No questions are available.", "bad");
+		}
+
+		function renderFatalError(error) {
+			sessionState.completed = true;
+			dom.questionCard.classList.add("hidden");
+			dom.resultsView.classList.add("visible");
+			dom.finalScore.textContent = "0";
+			dom.finalMax.textContent = String(sessionState.maxQuestions);
+			dom.finalMessage.textContent = error.message;
+			dom.accuracyMetric.textContent = "0%";
+			dom.answeredMetric.textContent = "0";
+			dom.finalDifficulty.textContent = "N/A";
+			dom.stateMetric.textContent = "Offline";
+			setFeedback("Unable to reach the adaptive testing API.", "bad");
+		}
+
+		function showQuestionView() {
+			dom.resultsView.classList.remove("visible");
+			dom.questionCard.classList.remove("hidden");
+			renderProgress(0, 0, sessionState.maxQuestions);
+			clearSelection();
+		}
+
+		function showRegistration() {
+			sessionState.completed = false;
+			sessionState.activeQuestionId = null;
+			dom.practiceShell.classList.add("hidden");
+			dom.registrationView.classList.remove("hidden");
+			dom.registrationError.textContent = "";
+			dom.studentNameInput.focus();
+		}
+
+		function hideRegistrationAndShowPractice() {
+			dom.registrationView.classList.add("hidden");
+			dom.practiceShell.classList.remove("hidden");
+			dom.registrationError.textContent = "";
+		}
+
+		function setRegistrationBusy(isBusy) {
+			dom.startPracticeButton.disabled = isBusy;
+			dom.studentNameInput.disabled = isBusy;
+			dom.startPracticeButton.textContent = isBusy ? "Starting..." : "Start Practice";
+		}
+
+		function selectOption(selectedCard) {
+			dom.optionCards.forEach((card) => card.classList.toggle("selected", card === selectedCard));
+			dom.validationMessage.textContent = "";
+		}
+
+		function clearSelection() {
+			dom.answerForm.reset();
+			dom.optionCards.forEach((card) => card.classList.remove("selected"));
+			dom.validationMessage.textContent = "";
+		}
+
+		function setBusy(isBusy, stateLabel) {
+			sessionState.busy = isBusy;
+			dom.submitButton.disabled = isBusy || sessionState.completed || sessionState.activeQuestionId === null;
+			dom.stateMetric.textContent = stateLabel;
+		}
+
+		function setFeedback(message, tone) {
+			dom.feedback.textContent = message;
+			dom.feedback.classList.remove("good", "bad");
+			if (tone) {
+				dom.feedback.classList.add(tone);
+			}
+		}
+
+		async function readJson(response) {
+			const text = await response.text();
+			return text ? JSON.parse(text) : {};
+		}
+	</script>
+</body>
+</html>

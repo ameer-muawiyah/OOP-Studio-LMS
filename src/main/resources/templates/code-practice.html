@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>OOP Studio // Code Runner Workspace</title>
+	<title>OOP Studio | Code Runner Workspace</title>
 	<style>
 		:root {
 			color-scheme: dark;
@@ -623,7 +623,7 @@
 	<div class="workspace-shell">
 		<header class="topbar">
 			<div class="brand">
-				<h1>OOP Studio // Code Runner Workspace</h1>
+				<h1>OOP Studio | Code Runner Workspace</h1>
 				<p>Practical Java examiner connected to the local compiler engine.</p>
 			</div>
 			<aside class="status-card" aria-label="Execution status">
@@ -637,7 +637,7 @@
 				<div class="problem-header">
 					<div class="kicker">Challenge Packet</div>
 					<h2 id="challengeTitle" class="problem-title">Loading practical prompt...</h2>
-					<div id="difficultyChip" class="difficulty-chip">Difficulty // Pending</div>
+					<div id="difficultyChip" class="difficulty-chip">Difficulty: Pending</div>
 					<div class="challenge-switcher">
 						<label for="challengeSelector">Switch Coding Task</label>
 						<select id="challengeSelector" class="challenge-select" disabled>
@@ -747,7 +747,7 @@
 			challenges.forEach((challenge) => {
 				const option = document.createElement("option");
 				option.value = String(challenge.id);
-				option.textContent = `${challenge.title} // ${challenge.difficulty}`;
+				option.textContent = `${challenge.title} (${toTitleCase(challenge.difficulty)})`;
 				dom.challengeSelector.appendChild(option);
 			});
 			dom.challengeSelector.disabled = false;
@@ -834,7 +834,7 @@
 		function renderChallenge(challenge) {
 			dom.challengeTitle.textContent = challenge.title;
 			dom.challengeDescription.textContent = challenge.description;
-			dom.difficultyChip.textContent = `Difficulty // ${challenge.difficulty}`;
+			dom.difficultyChip.textContent = `Difficulty: ${challenge.difficulty}`;
 		}
 
 		function renderExecutionResult(result) {
@@ -969,6 +969,11 @@
 					.replaceAll(">", "&gt;")
 					.replaceAll('"', "&quot;")
 					.replaceAll("'", "&#039;");
+		}
+
+		function toTitleCase(value) {
+			const normalized = String(value || "").toLowerCase();
+			return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : "Ready";
 		}
 
 		async function readJson(response) {

@@ -44,6 +44,7 @@ public class InstructorController {
 		model.addAttribute("averageScore", formatScore(averageScore));
 		model.addAttribute("highestScore", highestScore == null ? 0 : highestScore);
 		model.addAttribute("teacherName", buildTeacherName(teacher));
+		model.addAttribute("teacherId", teacher.getUniqueTeacherId());
 
 		return "instructor-dashboard";
 	}

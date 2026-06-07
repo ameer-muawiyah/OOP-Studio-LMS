@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>OOP Studio // Adaptive Practice Panel</title>
+	<title>OOP Studio | Adaptive Practice Panel</title>
 	<style>
 		:root {
 			color-scheme: dark;
@@ -670,7 +670,7 @@
 	<div id="practiceShell" class="page-shell">
 		<header class="header">
 			<div class="brand">
-				<h1>OOP Studio // Adaptive Practice Panel</h1>
+				<h1>OOP Studio | Adaptive Practice Panel</h1>
 				<p>Quantum Developer training interface for adaptive OOP multiple-choice practice.</p>
 			</div>
 			<aside class="counter-card" aria-label="Question counter">
@@ -685,8 +685,8 @@
 		<main class="layout-grid">
 			<section id="questionCard" class="question-card" aria-live="polite">
 				<div class="meta-row">
-					<div id="difficultyChip" class="status-chip">Difficulty // MEDIUM</div>
-					<div id="topicChip" class="status-chip">Topic // Ready</div>
+					<div id="difficultyChip" class="status-chip">Difficulty: MEDIUM</div>
+					<div id="topicChip" class="status-chip">Topic: Ready</div>
 				</div>
 
 				<div class="code-block">
@@ -906,8 +906,8 @@
 			dom.optionB.textContent = question.optionB;
 			dom.optionC.textContent = question.optionC;
 			dom.optionD.textContent = question.optionD;
-			dom.difficultyChip.textContent = `Difficulty // ${question.difficulty || payload.currentDifficulty || "MEDIUM"}`;
-			dom.topicChip.textContent = `Topic // ${question.topicTag || "general"}`;
+			dom.difficultyChip.textContent = `Difficulty: ${question.difficulty || payload.currentDifficulty || "MEDIUM"}`;
+			dom.topicChip.textContent = `Topic: ${question.topicTag || "general"}`;
 			dom.stateMetric.textContent = payload.currentDifficulty || question.difficulty || "Active";
 			dom.lastSignal.textContent = "Ready";
 			clearSelection();

@@ -3,57 +3,49 @@ package com.oopstudio.lms.controllers;
 import java.util.List;
 import java.util.Locale;
 
-import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.server.ResponseStatusException;
 
-import com.oopstudio.lms.models.ExamSession;
 import com.oopstudio.lms.models.QuizResult;
+import com.oopstudio.lms.models.User;
 import com.oopstudio.lms.repositories.QuizResultRepository;
-import com.oopstudio.lms.services.ExamSessionService;
+import com.oopstudio.lms.repositories.UserRepository;
 
 @Controller
 public class InstructorController {
 
 	private final QuizResultRepository quizResultRepository;
-	private final ExamSessionService examSessionService;
+	private final UserRepository userRepository;
 
 	public InstructorController(
 			QuizResultRepository quizResultRepository,
-			ExamSessionService examSessionService
+			UserRepository userRepository
 	) {
 		this.quizResultRepository = quizResultRepository;
-		this.examSessionService = examSessionService;
+		this.userRepository = userRepository;
 	}
 
 	@GetMapping("/instructor/dashboard")
-	public String dashboard(Model model) {
-		List<QuizResult> results = quizResultRepository.findAll(Sort.by(Sort.Direction.DESC, "completedAt"));
-		Double averageScore = quizResultRepository.calculateAverageScore();
-		Integer highestScore = quizResultRepository.findMaximumScore();
-		ExamSession examSession = examSessionService.getOrCreateExamSession();
+	public String dashboard(
+			Authentication authentication,
+			Model model
+	) {
+		User teacher = resolveAuthenticatedTeacher(authentication);
+		List<QuizResult> results = quizResultRepository.findByStudentSupervisorIdOrderByCompletedAtDesc(teacher.getId());
+		Double averageScore = quizResultRepository.calculateAverageScoreForSupervisor(teacher.getId());
+		Integer highestScore = quizResultRepository.findMaximumScoreForSupervisor(teacher.getId());
 
 		model.addAttribute("results", results);
 		model.addAttribute("totalExams", results.size());
 		model.addAttribute("averageScore", formatScore(averageScore));
 		model.addAttribute("highestScore", highestScore == null ? 0 : highestScore);
-		model.addAttribute("examActive", Boolean.TRUE.equals(examSession.getActive()));
+		model.addAttribute("teacherName", buildTeacherName(teacher));
 
 		return "instructor-dashboard";
-	}
-
-	@PostMapping("/api/instructor/exam/toggle")
-	@ResponseBody
-	public ResponseEntity<ExamControlResponse> toggleOfficialExam() {
-		ExamSession examSession = examSessionService.toggleOfficialExam();
-		return ResponseEntity.ok(new ExamControlResponse(
-				Boolean.TRUE.equals(examSession.getActive()),
-				examSession.getUpdatedAt().toString()
-		));
 	}
 
 	private String formatScore(Double score) {
@@ -61,6 +53,20 @@ public class InstructorController {
 		return String.format(Locale.ROOT, "%.2f", safeScore);
 	}
 
-	public record ExamControlResponse(boolean active, String updatedAt) {
+	private User resolveAuthenticatedTeacher(Authentication authentication) {
+		if (authentication == null || authentication.getName() == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Teacher authentication is required.");
+		}
+
+		return userRepository.findByUniqueTeacherId(authentication.getName())
+				.filter(user -> user.getRole() == User.Role.TEACHER)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Teacher account is required."));
+	}
+
+	private String buildTeacherName(User teacher) {
+		String firstName = teacher.getFirstName() == null ? "" : teacher.getFirstName().trim();
+		String lastName = teacher.getLastName() == null ? "" : teacher.getLastName().trim();
+		String fullName = (firstName + " " + lastName).trim();
+		return fullName.isBlank() ? teacher.getUniqueTeacherId() : fullName;
 	}
 }

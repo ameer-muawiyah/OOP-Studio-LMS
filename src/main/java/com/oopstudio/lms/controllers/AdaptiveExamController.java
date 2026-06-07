@@ -9,20 +9,22 @@ import java.util.Set;
 
 import jakarta.servlet.http.HttpSession;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.oopstudio.lms.models.Question;
 import com.oopstudio.lms.models.QuizResult;
+import com.oopstudio.lms.models.User;
 import com.oopstudio.lms.repositories.QuestionRepository;
 import com.oopstudio.lms.repositories.QuizResultRepository;
+import com.oopstudio.lms.repositories.UserRepository;
 import com.oopstudio.lms.services.AdaptiveEngineService;
 import com.oopstudio.lms.services.AdaptiveEngineService.AdaptiveQuestionResult;
-import com.oopstudio.lms.services.ExamSessionService;
 
 @RestController
 public class AdaptiveExamController {
@@ -31,7 +33,6 @@ public class AdaptiveExamController {
 	private static final String SERVED_IDS = "servedIds";
 	private static final String ANSWERED_IDS = "answeredIds";
 	private static final String ACTIVE_QUESTION_ID = "activeQuestionId";
-	private static final String STUDENT_NAME = "studentName";
 	private static final String SCORE = "score";
 	private static final String ANSWERED_COUNT = "answeredCount";
 	private static final String EXAM_COMPLETE = "examComplete";
@@ -43,34 +44,34 @@ public class AdaptiveExamController {
 	private final AdaptiveEngineService adaptiveEngineService;
 	private final QuestionRepository questionRepository;
 	private final QuizResultRepository quizResultRepository;
-	private final ExamSessionService examSessionService;
+	private final UserRepository userRepository;
 
 	public AdaptiveExamController(
 			AdaptiveEngineService adaptiveEngineService,
 			QuestionRepository questionRepository,
 			QuizResultRepository quizResultRepository,
-			ExamSessionService examSessionService
+			UserRepository userRepository
 	) {
 		this.adaptiveEngineService = adaptiveEngineService;
 		this.questionRepository = questionRepository;
 		this.quizResultRepository = quizResultRepository;
-		this.examSessionService = examSessionService;
+		this.userRepository = userRepository;
 	}
 
 	@GetMapping("/api/exam/start")
 	public ResponseEntity<?> startExam(
-			@RequestParam String studentName,
+			Authentication authentication,
 			HttpSession session
 	) {
-		String normalizedStudentName;
-		try {
-			normalizedStudentName = normalizeStudentName(studentName);
-		} catch (IllegalArgumentException exception) {
-			return ResponseEntity.badRequest().body(new ErrorResponse("INVALID_STUDENT_NAME", exception.getMessage()));
+		User student = getAuthenticatedStudent(authentication);
+		if (student == null) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(
+					"STUDENT_ACCOUNT_REQUIRED",
+					"Sign in with a registered student email account before starting an adaptive exam."
+			));
 		}
 
 		resetExamSession(session);
-		session.setAttribute(STUDENT_NAME, normalizedStudentName);
 
 		return adaptiveEngineService.findQuestionForDifficulty(INITIAL_DIFFICULTY, List.of())
 				.map(result -> {
@@ -105,8 +106,17 @@ public class AdaptiveExamController {
 	public ResponseEntity<?> submitAnswer(
 			@RequestParam Long questionId,
 			@RequestParam String selectedOption,
+			Authentication authentication,
 			HttpSession session
 	) {
+		User student = getAuthenticatedStudent(authentication);
+		if (student == null) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(
+					"STUDENT_ACCOUNT_REQUIRED",
+					"Sign in with a registered student email account before submitting an adaptive exam answer."
+			));
+		}
+
 		Question.Difficulty currentDifficulty = getCurrentDifficulty(session);
 		if (currentDifficulty == null) {
 			return ResponseEntity.badRequest().body(new ErrorResponse(
@@ -156,7 +166,7 @@ public class AdaptiveExamController {
 
 		Question.Difficulty nextDifficulty = adaptiveEngineService.calculateNextDifficulty(currentDifficulty, isCorrect);
 		if (updatedAnsweredCount >= MAX_QUESTIONS_PER_EXAM) {
-			markExamComplete(session, nextDifficulty, updatedScore, updatedAnsweredCount);
+			markExamComplete(session, nextDifficulty, updatedScore, updatedAnsweredCount, student);
 			return ResponseEntity.ok(buildCompletedSubmitResponse(
 					isCorrect,
 					updatedScore,
@@ -185,7 +195,7 @@ public class AdaptiveExamController {
 					));
 				})
 				.orElseGet(() -> {
-					markExamComplete(session, nextDifficulty, updatedScore, updatedAnsweredCount);
+					markExamComplete(session, nextDifficulty, updatedScore, updatedAnsweredCount, student);
 					return ResponseEntity.ok(buildCompletedSubmitResponse(
 							isCorrect,
 							updatedScore,
@@ -224,32 +234,29 @@ public class AdaptiveExamController {
 			HttpSession session,
 			Question.Difficulty finalDifficulty,
 			int score,
-			int answeredCount
+			int answeredCount,
+			User student
 	) {
 		session.setAttribute(CURRENT_DIFFICULTY, finalDifficulty);
 		session.setAttribute(ACTIVE_QUESTION_ID, null);
 		session.setAttribute(EXAM_COMPLETE, true);
-		persistQuizResultIfNecessary(session, finalDifficulty, score, answeredCount);
+		persistQuizResultIfNecessary(session, finalDifficulty, score, answeredCount, student);
 	}
 
 	private void persistQuizResultIfNecessary(
 			HttpSession session,
 			Question.Difficulty finalDifficulty,
 			int score,
-			int answeredCount
+			int answeredCount,
+			User student
 	) {
 		Object persisted = session.getAttribute(RESULT_PERSISTED);
 		if (persisted instanceof Boolean alreadyPersisted && alreadyPersisted) {
 			return;
 		}
 
-		if (!examSessionService.isOfficialExamActive()) {
-			session.setAttribute(RESULT_PERSISTED, true);
-			return;
-		}
-
 		QuizResult quizResult = new QuizResult();
-		quizResult.setStudentName(getStudentName(session));
+		quizResult.setStudent(student);
 		quizResult.setScore(score);
 		quizResult.setTotalQuestions(answeredCount);
 		quizResult.setDifficultyReached(finalDifficulty.name());
@@ -325,26 +332,14 @@ public class AdaptiveExamController {
 		return normalizedOption;
 	}
 
-	private String normalizeStudentName(String studentName) {
-		if (studentName == null || studentName.isBlank()) {
-			throw new IllegalArgumentException("studentName is required to start the exam.");
+	private User getAuthenticatedStudent(Authentication authentication) {
+		if (authentication == null || authentication.getName() == null) {
+			return null;
 		}
 
-		String normalizedName = studentName.trim();
-		if (normalizedName.length() > 120) {
-			throw new IllegalArgumentException("studentName must be 120 characters or fewer.");
-		}
-
-		return normalizedName;
-	}
-
-	private String getStudentName(HttpSession session) {
-		Object value = session.getAttribute(STUDENT_NAME);
-		if (value instanceof String studentName && !studentName.isBlank()) {
-			return studentName;
-		}
-
-		return "Unknown Student";
+		return userRepository.findByEmail(authentication.getName())
+				.filter(user -> user.getRole() == User.Role.STUDENT)
+				.orElse(null);
 	}
 
 	private boolean isCorrectAnswer(Question question, String selectedOption) {

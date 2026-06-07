@@ -4,9 +4,12 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -17,8 +20,9 @@ public class QuizResult {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false, length = 120)
-	private String studentName;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "student_id")
+	private User student;
 
 	@Column(nullable = false)
 	private Integer score;
@@ -43,12 +47,12 @@ public class QuizResult {
 		this.id = id;
 	}
 
-	public String getStudentName() {
-		return studentName;
+	public User getStudent() {
+		return student;
 	}
 
-	public void setStudentName(String studentName) {
-		this.studentName = studentName;
+	public void setStudent(User student) {
+		this.student = student;
 	}
 
 	public Integer getScore() {

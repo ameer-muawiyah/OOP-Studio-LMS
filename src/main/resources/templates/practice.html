@@ -677,22 +677,7 @@
 		</div>
 	</nav>
 
-	<section id="registrationView" class="registration-view">
-		<div class="registration-card">
-			<div>
-				<h1>Enter Your Name to Begin Practice</h1>
-				<p>Your name is stored with the final adaptive score when the exam session completes.</p>
-			</div>
-			<div class="name-field">
-				<label for="studentNameInput">Student Name</label>
-				<input id="studentNameInput" class="name-input" type="text" maxlength="120" autocomplete="name" placeholder="e.g., Ayesha Khan">
-			</div>
-			<button id="startPracticeButton" class="start-button" type="button">Start Practice</button>
-			<div id="registrationError" class="registration-error" role="status"></div>
-		</div>
-	</section>
-
-	<div id="practiceShell" class="page-shell hidden">
+	<div id="practiceShell" class="page-shell">
 		<header class="header">
 			<div class="brand">
 				<h1>OOP Studio // Adaptive Practice Panel</h1>
@@ -795,16 +780,11 @@
 			activeQuestionId: null,
 			maxQuestions: 9,
 			busy: false,
-			completed: false,
-			studentName: ""
+			completed: false
 		};
 
 		const dom = {
-			registrationView: document.getElementById("registrationView"),
 			practiceShell: document.getElementById("practiceShell"),
-			studentNameInput: document.getElementById("studentNameInput"),
-			startPracticeButton: document.getElementById("startPracticeButton"),
-			registrationError: document.getElementById("registrationError"),
 			questionCard: document.getElementById("questionCard"),
 			resultsView: document.getElementById("resultsView"),
 			answerForm: document.getElementById("answerForm"),
@@ -834,49 +814,27 @@
 			optionCards: Array.from(document.querySelectorAll("[data-option-card]"))
 		};
 
-		document.addEventListener("DOMContentLoaded", initializeRegistration);
-		dom.startPracticeButton.addEventListener("click", startExam);
-		dom.studentNameInput.addEventListener("keydown", (event) => {
-			if (event.key === "Enter") {
-				event.preventDefault();
-				startExam();
-			}
-		});
+		document.addEventListener("DOMContentLoaded", startExam);
 		dom.answerForm.addEventListener("submit", submitAnswer);
-		dom.restartButton.addEventListener("click", showRegistration);
+		dom.restartButton.addEventListener("click", startExam);
 		dom.optionCards.forEach((card) => {
 			const input = card.querySelector("input[type='radio']");
 			card.addEventListener("click", () => selectOption(card));
 			input.addEventListener("change", () => selectOption(card));
 		});
 
-		function initializeRegistration() {
-			dom.studentNameInput.focus();
-		}
-
 		async function startExam() {
-			const studentName = dom.studentNameInput.value.trim();
-			if (!studentName) {
-				dom.registrationError.textContent = "Enter your name before starting.";
-				dom.studentNameInput.focus();
-				return;
-			}
-
-			sessionState.studentName = studentName;
-			setRegistrationBusy(true);
 			setBusy(true, "Starting");
 			sessionState.completed = false;
 			sessionState.activeQuestionId = null;
 
 			try {
-				const params = new URLSearchParams({ studentName });
-				const response = await fetch(`/api/exam/start?${params.toString()}`, { method: "GET" });
+				const response = await fetch("/api/exam/start", { method: "GET" });
 				const payload = await readJson(response);
 				if (!response.ok) {
 					throw new Error(payload.message || "Unable to start the exam.");
 				}
 
-				hideRegistrationAndShowPractice();
 				showQuestionView();
 				if (payload.completed || !payload.question) {
 					renderUnavailableState(payload);
@@ -888,11 +846,8 @@
 				renderProgress(payload.score, payload.answeredCount, payload.maxQuestions);
 				setFeedback("Adaptive session initialized.", "good");
 			} catch (error) {
-				dom.registrationError.textContent = error.message;
-				dom.practiceShell.classList.add("hidden");
-				dom.registrationView.classList.remove("hidden");
+				renderFatalError(error);
 			} finally {
-				setRegistrationBusy(false);
 				if (!sessionState.completed) {
 					setBusy(false, "Active");
 				}
@@ -1041,27 +996,6 @@
 			dom.questionCard.classList.remove("hidden");
 			renderProgress(0, 0, sessionState.maxQuestions);
 			clearSelection();
-		}
-
-		function showRegistration() {
-			sessionState.completed = false;
-			sessionState.activeQuestionId = null;
-			dom.practiceShell.classList.add("hidden");
-			dom.registrationView.classList.remove("hidden");
-			dom.registrationError.textContent = "";
-			dom.studentNameInput.focus();
-		}
-
-		function hideRegistrationAndShowPractice() {
-			dom.registrationView.classList.add("hidden");
-			dom.practiceShell.classList.remove("hidden");
-			dom.registrationError.textContent = "";
-		}
-
-		function setRegistrationBusy(isBusy) {
-			dom.startPracticeButton.disabled = isBusy;
-			dom.studentNameInput.disabled = isBusy;
-			dom.startPracticeButton.textContent = isBusy ? "Starting..." : "Start Practice";
 		}
 
 		function selectOption(selectedCard) {

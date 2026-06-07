@@ -45,7 +45,7 @@
 		}
 
 		.login-panel {
-			width: min(460px, 100%);
+			width: min(480px, 100%);
 			padding: clamp(24px, 5vw, 42px);
 			border: 1px solid rgba(16, 185, 129, 0.48);
 			border-radius: 8px;
@@ -150,7 +150,25 @@
 			transform: translateY(-2px);
 		}
 
-		.credentials {
+		.link-row {
+			display: flex;
+			justify-content: space-between;
+			gap: 12px;
+			flex-wrap: wrap;
+			padding-top: 2px;
+		}
+
+		.link-row a {
+			color: var(--emerald-bright);
+			font-weight: 850;
+			text-decoration: none;
+		}
+
+		.link-row a:hover {
+			text-decoration: underline;
+		}
+
+		.helper {
 			padding: 14px;
 			border: 1px solid var(--line);
 			border-radius: 8px;
@@ -171,11 +189,11 @@
 		<section class="brand">
 			<span>Secure LMS Gateway</span>
 			<h1>OOP Studio Access</h1>
-			<p>Authenticate into the adaptive exam, code runner, and instructor command center.</p>
+			<p>Students sign in with email. Instructors sign in with their generated unique teacher ID.</p>
 		</section>
 
 		<div class="alert error" th:if="${param.error}">
-			Invalid credentials. Verify your username and password.
+			Invalid credentials. Verify your identifier and password.
 		</div>
 		<div class="alert logout" th:if="${param.logout}">
 			You have been securely logged out.
@@ -185,7 +203,7 @@
 			<input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
 			<div class="field">
-				<label for="username">Username</label>
+				<label for="username">Email or Unique Teacher ID</label>
 				<input id="username" name="username" type="text" autocomplete="username" required autofocus>
 			</div>
 
@@ -197,9 +215,13 @@
 			<button class="submit-button" type="submit">Authenticate Access</button>
 		</form>
 
-		<div class="credentials">
-			Student: <code>student / password123</code><br>
-			Teacher: <code>teacher / admin123</code>
+		<div class="link-row">
+			<a href="/register#student">Create Student Account</a>
+			<a href="/register#teacher">Register Instructor</a>
+		</div>
+
+		<div class="helper">
+			Default test accounts: <code>student@oopstudio.local / password123</code> and <code>T-1000 / admin123</code>.
 		</div>
 	</main>
 </body>

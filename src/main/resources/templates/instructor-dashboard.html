@@ -17,8 +17,6 @@
 			--emerald: #10b981;
 			--emerald-bright: #34d399;
 			--emerald-soft: rgba(16, 185, 129, 0.14);
-			--danger: #fb7185;
-			--danger-soft: rgba(251, 113, 133, 0.12);
 			--shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
 			font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 		}
@@ -95,117 +93,6 @@
 			box-shadow: 0 0 18px rgba(16, 185, 129, 0.86);
 		}
 
-		.control-card {
-			padding: 20px;
-			border: 1px solid var(--line);
-			border-radius: 8px;
-			background: rgba(26, 26, 26, 0.96);
-			box-shadow: var(--shadow);
-			display: grid;
-			grid-template-columns: minmax(0, 1fr) auto;
-			gap: 18px;
-			align-items: center;
-		}
-
-		.control-copy {
-			display: grid;
-			gap: 8px;
-		}
-
-		.control-copy span {
-			color: var(--emerald-bright);
-			font-size: 0.78rem;
-			font-weight: 900;
-			text-transform: uppercase;
-		}
-
-		.control-copy h2 {
-			margin: 0;
-			font-size: clamp(1.2rem, 2.2vw, 1.75rem);
-			letter-spacing: 0;
-		}
-
-		.control-copy p {
-			margin: 0;
-			color: var(--muted);
-			line-height: 1.55;
-		}
-
-		.control-actions {
-			display: grid;
-			gap: 12px;
-			justify-items: end;
-		}
-
-		.exam-state {
-			display: inline-flex;
-			align-items: center;
-			gap: 8px;
-			min-height: 34px;
-			padding: 7px 11px;
-			border: 1px solid var(--line-strong);
-			border-radius: 8px;
-			background: #101010;
-			color: var(--muted);
-			font-size: 0.78rem;
-			font-weight: 900;
-			text-transform: uppercase;
-		}
-
-		.exam-state::before {
-			content: "";
-			width: 8px;
-			height: 8px;
-			border-radius: 50%;
-			background: var(--danger);
-			box-shadow: 0 0 18px rgba(251, 113, 133, 0.7);
-		}
-
-		.exam-state.active {
-			border-color: rgba(16, 185, 129, 0.6);
-			background: var(--emerald-soft);
-			color: var(--emerald-bright);
-		}
-
-		.exam-state.active::before {
-			background: var(--emerald);
-			box-shadow: 0 0 18px rgba(16, 185, 129, 0.86);
-		}
-
-		.toggle-button {
-			min-height: 44px;
-			padding: 0 18px;
-			border: 1px solid var(--emerald);
-			border-radius: 8px;
-			background: linear-gradient(90deg, var(--emerald), var(--emerald-bright));
-			color: #04130d;
-			font-weight: 900;
-			cursor: pointer;
-			box-shadow: 0 14px 34px rgba(16, 185, 129, 0.2);
-			transition: transform 160ms ease, opacity 160ms ease;
-		}
-
-		.toggle-button:hover:not(:disabled) {
-			transform: translateY(-1px);
-		}
-
-		.toggle-button:disabled {
-			cursor: not-allowed;
-			opacity: 0.58;
-		}
-
-		.control-message {
-			min-height: 20px;
-			color: var(--muted);
-			font-size: 0.84rem;
-			font-weight: 780;
-			text-align: right;
-		}
-
-		.control-message.error {
-			color: var(--danger);
-		}
-
 		.stats-grid {
 			display: grid;
 			grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -277,7 +164,7 @@
 		table {
 			width: 100%;
 			border-collapse: collapse;
-			min-width: 760px;
+			min-width: 820px;
 		}
 
 		th,
@@ -339,18 +226,6 @@
 				flex-direction: column;
 			}
 
-			.control-card {
-				grid-template-columns: 1fr;
-			}
-
-			.control-actions {
-				justify-items: stretch;
-			}
-
-			.control-message {
-				text-align: left;
-			}
-
 			.live-chip {
 				width: fit-content;
 			}
@@ -366,121 +241,63 @@
 		<header class="header">
 			<div>
 				<h1>Professor Command Center</h1>
-				<p>Persistent MCQ analytics stream for OOP Studio LMS adaptive practice.</p>
+				<p th:text="'Supervisor matrix for ' + ${teacherName}">Supervisor matrix for instructor.</p>
 			</div>
-			<div class="live-chip">MySQL Analytics Online</div>
+			<div class="live-chip">Assigned Students Only</div>
 		</header>
-
-		<section class="control-card" aria-label="Exam control center">
-			<div class="control-copy">
-				<span>Exam Control Center</span>
-				<h2>Official Adaptive Exam Gate</h2>
-				<p>When the gate is active, completed MCQ sessions are persisted as official grades. When inactive, students can practice without writing to the grading matrix.</p>
-			</div>
-			<div class="control-actions">
-				<div id="examState"
-					 class="exam-state"
-					 th:classappend="${examActive} ? ' active' : ''"
-					 th:attr="data-active=${examActive}"
-					 th:text="${examActive} ? 'Official Exam Active' : 'Practice Mode Only'">Practice Mode Only</div>
-				<button id="examToggleButton"
-						class="toggle-button"
-						type="button"
-						th:text="${examActive} ? 'Deactivate Official Exam' : 'Activate Official Exam'">Activate Official Exam</button>
-				<div id="controlMessage" class="control-message">State is loaded from MySQL on dashboard open.</div>
-			</div>
-		</section>
 
 		<section class="stats-grid" aria-label="Class performance statistics">
 			<article class="stat-card">
-				<span>Class Average</span>
+				<span>Assigned Class Average</span>
 				<strong th:text="${averageScore}">0.00</strong>
 			</article>
 			<article class="stat-card">
-				<span>Total Exams Graded</span>
+				<span>Total Assigned Exams</span>
 				<strong th:text="${totalExams}">0</strong>
 			</article>
 			<article class="stat-card">
-				<span>Highest Score Achieved</span>
+				<span>Highest Assigned Score</span>
 				<strong th:text="${highestScore}">0</strong>
 			</article>
 		</section>
 
 		<section class="audit-panel">
 			<div class="audit-header">
-				<h2>Student Result Audit Matrix</h2>
-				<div class="live-chip">Stored Records</div>
+				<h2>Assigned Student Result Matrix</h2>
+				<div class="live-chip">Supervisor Filtered</div>
 			</div>
 
 			<div class="table-wrap" th:if="${!#lists.isEmpty(results)}">
 				<table>
 					<thead>
 						<tr>
-							<th>Student Name</th>
+							<th>First Name</th>
+							<th>Last Name</th>
+							<th>Email</th>
 							<th>Final Score</th>
 							<th>Total Questions</th>
-							<th>Ending Difficulty Tier</th>
+							<th>Ending Difficulty</th>
 							<th>Completion Timestamp</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr th:each="result : ${results}">
-							<td th:text="${result.studentName}">Student</td>
+							<td th:text="${result.student.firstName}">First</td>
+							<td th:text="${result.student.lastName}">Last</td>
+							<td th:text="${result.student.email}">student@example.com</td>
 							<td><span class="score-pill" th:text="${result.score}">0</span></td>
 							<td th:text="${result.totalQuestions}">0</td>
 							<td><span class="difficulty-pill" th:text="${result.difficultyReached}">MEDIUM</span></td>
-							<td th:text="${result.completedAt}">2026-06-06T00:00:00</td>
+							<td th:text="${result.completedAt}">2026-06-07T00:00:00</td>
 						</tr>
 					</tbody>
 				</table>
 			</div>
 
 			<div class="empty-state" th:if="${#lists.isEmpty(results)}">
-				No completed adaptive practice sessions have been recorded yet.
+				No completed adaptive sessions have been recorded for your assigned students yet.
 			</div>
 		</section>
 	</div>
-	<script>
-		const examState = document.getElementById("examState");
-		const examToggleButton = document.getElementById("examToggleButton");
-		const controlMessage = document.getElementById("controlMessage");
-
-		examToggleButton.addEventListener("click", toggleOfficialExam);
-
-		async function toggleOfficialExam() {
-			examToggleButton.disabled = true;
-			controlMessage.classList.remove("error");
-			controlMessage.textContent = "Updating official exam state...";
-
-			try {
-				const response = await fetch("/api/instructor/exam/toggle", {
-					method: "POST",
-					headers: {
-						"Accept": "application/json"
-					}
-				});
-				const payload = await response.json();
-
-				if (!response.ok) {
-					throw new Error(payload.message || "Exam state update failed.");
-				}
-
-				renderExamState(Boolean(payload.active), payload.updatedAt);
-			} catch (error) {
-				controlMessage.classList.add("error");
-				controlMessage.textContent = error.message;
-			} finally {
-				examToggleButton.disabled = false;
-			}
-		}
-
-		function renderExamState(active, updatedAt) {
-			examState.dataset.active = String(active);
-			examState.classList.toggle("active", active);
-			examState.textContent = active ? "Official Exam Active" : "Practice Mode Only";
-			examToggleButton.textContent = active ? "Deactivate Official Exam" : "Activate Official Exam";
-			controlMessage.textContent = updatedAt ? `Last state change: ${updatedAt}` : "Exam state updated.";
-		}
-	</script>
 </body>
 </html>

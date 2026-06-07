@@ -62,14 +62,66 @@ WHERE NOT EXISTS (
 	SELECT 1 FROM coding_questions WHERE title = 'Implement a Factorial Method'
 );
 
-INSERT INTO app_users (username, password, role)
-SELECT 'student', '$2a$10$DWeCLA55ckAgbP/JA9a5FekxVZtJb/ejuz2zUWlehWgBO4CAtWzBu', 'STUDENT'
+SET @student_name_column_exists := (
+	SELECT COUNT(*)
+	FROM information_schema.columns
+	WHERE table_schema = DATABASE()
+		AND table_name = 'quiz_results'
+		AND column_name = 'student_name'
+);
+SET @student_name_nullable_sql := IF(
+	@student_name_column_exists > 0,
+	'ALTER TABLE quiz_results MODIFY COLUMN student_name varchar(120) NULL',
+	'SELECT 1'
+);
+PREPARE student_name_nullable_statement FROM @student_name_nullable_sql;
+EXECUTE student_name_nullable_statement;
+DEALLOCATE PREPARE student_name_nullable_statement;
+
+UPDATE app_users
+SET
+	first_name = COALESCE(first_name, 'Default'),
+	last_name = COALESCE(last_name, 'Teacher'),
+	email = COALESCE(email, 'teacher@oopstudio.local'),
+	unique_teacher_id = COALESCE(unique_teacher_id, 'T-1000'),
+	username = 'T-1000'
+WHERE username = 'teacher' OR unique_teacher_id = 'T-1000';
+
+INSERT INTO app_users (first_name, last_name, email, unique_teacher_id, username, password, role)
+SELECT
+	'Default',
+	'Teacher',
+	'teacher@oopstudio.local',
+	'T-1000',
+	'T-1000',
+	'$2a$10$ip/CtIWPyfMcnTgSMoXOIeYcHRmiqNrlIaUhPiOzcVXnNpQ5l7eK.',
+	'TEACHER'
 WHERE NOT EXISTS (
-	SELECT 1 FROM app_users WHERE username = 'student'
+	SELECT 1 FROM app_users WHERE email = 'teacher@oopstudio.local' OR unique_teacher_id = 'T-1000'
 );
 
-INSERT INTO app_users (username, password, role)
-SELECT 'teacher', '$2a$10$ip/CtIWPyfMcnTgSMoXOIeYcHRmiqNrlIaUhPiOzcVXnNpQ5l7eK.', 'TEACHER'
+UPDATE app_users
+SET
+	first_name = COALESCE(first_name, 'Default'),
+	last_name = COALESCE(last_name, 'Student'),
+	email = COALESCE(email, 'student@oopstudio.local'),
+	unique_teacher_id = NULL,
+	username = 'student@oopstudio.local',
+	supervisor_id = (
+		SELECT teacher_ref.id
+		FROM (SELECT id FROM app_users WHERE unique_teacher_id = 'T-1000' LIMIT 1) teacher_ref
+	)
+WHERE username = 'student' OR email = 'student@oopstudio.local';
+
+INSERT INTO app_users (first_name, last_name, email, username, password, role, supervisor_id)
+SELECT
+	'Default',
+	'Student',
+	'student@oopstudio.local',
+	'student@oopstudio.local',
+	'$2a$10$DWeCLA55ckAgbP/JA9a5FekxVZtJb/ejuz2zUWlehWgBO4CAtWzBu',
+	'STUDENT',
+	(SELECT id FROM app_users WHERE unique_teacher_id = 'T-1000' LIMIT 1)
 WHERE NOT EXISTS (
-	SELECT 1 FROM app_users WHERE username = 'teacher'
+	SELECT 1 FROM app_users WHERE email = 'student@oopstudio.local'
 );

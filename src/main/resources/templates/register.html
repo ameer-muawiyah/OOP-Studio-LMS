@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OOP Studio // Registration</title>
+	<style>
+		:root {
+			color-scheme: dark;
+			--bg: #0d0d0d;
+			--panel: #1a1a1a;
+			--panel-soft: #141414;
+			--line: #2d2d2d;
+			--line-strong: #3b3b3b;
+			--text: #f4f7f5;
+			--muted: #9ca3af;
+			--emerald: #10b981;
+			--emerald-bright: #34d399;
+			--emerald-soft: rgba(16, 185, 129, 0.14);
+			--danger: #fb7185;
+			--danger-soft: rgba(251, 113, 133, 0.12);
+			--warning: #fbbf24;
+			--shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+			font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			min-height: 100vh;
+			margin: 0;
+			background:
+				linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent 32%),
+				linear-gradient(180deg, #111111 0%, var(--bg) 58%, #080808 100%);
+			color: var(--text);
+		}
+
+		button,
+		input,
+		select {
+			font: inherit;
+		}
+
+		.shell {
+			width: min(1180px, calc(100vw - 32px));
+			min-height: 100vh;
+			margin: 0 auto;
+			padding: 32px 0 48px;
+			display: grid;
+			gap: 22px;
+			align-content: start;
+		}
+
+		.header,
+		.card {
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: rgba(26, 26, 26, 0.96);
+			box-shadow: var(--shadow);
+		}
+
+		.header {
+			padding: 22px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+		}
+
+		.header h1 {
+			margin: 0;
+			font-size: clamp(1.6rem, 4vw, 3rem);
+			line-height: 1.08;
+			letter-spacing: 0;
+		}
+
+		.header p {
+			margin: 8px 0 0;
+			color: var(--muted);
+			line-height: 1.55;
+		}
+
+		.login-link {
+			min-height: 42px;
+			display: inline-flex;
+			align-items: center;
+			padding: 0 14px;
+			border: 1px solid rgba(16, 185, 129, 0.55);
+			border-radius: 8px;
+			background: var(--emerald-soft);
+			color: var(--emerald-bright);
+			font-weight: 900;
+			text-decoration: none;
+			white-space: nowrap;
+		}
+
+		.grid {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 20px;
+			align-items: start;
+		}
+
+		.card {
+			padding: 22px;
+			display: grid;
+			gap: 18px;
+		}
+
+		.kicker {
+			color: var(--emerald-bright);
+			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+			font-size: 0.78rem;
+			font-weight: 900;
+			text-transform: uppercase;
+		}
+
+		.card h2 {
+			margin: 0;
+			font-size: clamp(1.35rem, 3vw, 2rem);
+			line-height: 1.12;
+			letter-spacing: 0;
+		}
+
+		.card p {
+			margin: 0;
+			color: var(--muted);
+			line-height: 1.55;
+		}
+
+		form {
+			display: grid;
+			gap: 14px;
+		}
+
+		.two-col {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 12px;
+		}
+
+		.field {
+			display: grid;
+			gap: 8px;
+		}
+
+		label {
+			color: var(--muted);
+			font-size: 0.76rem;
+			font-weight: 900;
+			text-transform: uppercase;
+		}
+
+		input,
+		select {
+			width: 100%;
+			min-height: 50px;
+			padding: 0 13px;
+			border: 1px solid var(--line-strong);
+			border-radius: 8px;
+			outline: 0;
+			background: #101010;
+			color: var(--text);
+		}
+
+		input:focus,
+		select:focus {
+			border-color: var(--emerald);
+			box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
+		}
+
+		.action {
+			min-height: 50px;
+			border: 1px solid var(--emerald);
+			border-radius: 8px;
+			background: linear-gradient(90deg, var(--emerald), var(--emerald-bright));
+			color: #03130d;
+			font-weight: 950;
+			cursor: pointer;
+			box-shadow: 0 16px 38px rgba(16, 185, 129, 0.2);
+		}
+
+		.action:disabled {
+			cursor: not-allowed;
+			opacity: 0.6;
+		}
+
+		.status {
+			min-height: 26px;
+			padding: 12px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: var(--panel-soft);
+			color: var(--muted);
+			line-height: 1.45;
+		}
+
+		.status.good {
+			border-color: rgba(16, 185, 129, 0.62);
+			background: var(--emerald-soft);
+			color: var(--emerald-bright);
+		}
+
+		.status.bad {
+			border-color: rgba(251, 113, 133, 0.62);
+			background: var(--danger-soft);
+			color: var(--danger);
+		}
+
+		.status.warn {
+			color: var(--warning);
+		}
+
+		code {
+			color: var(--emerald-bright);
+			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+		}
+
+		@media (max-width: 860px) {
+			.header {
+				align-items: stretch;
+				flex-direction: column;
+			}
+
+			.grid,
+			.two-col {
+				grid-template-columns: 1fr;
+			}
+
+			.login-link {
+				width: fit-content;
+			}
+		}
+	</style>
+</head>
+<body>
+	<main class="shell">
+		<header class="header">
+			<div>
+				<h1>OOP Studio Registration</h1>
+				<p>Create a database-backed account and bind students to their supervising instructor.</p>
+			</div>
+			<a class="login-link" href="/login">Back to Login</a>
+		</header>
+
+		<section class="grid">
+			<article id="student" class="card">
+				<div>
+					<div class="kicker">Student Pathway</div>
+					<h2>Join Under a Supervisor</h2>
+					<p>Your quiz results appear only in the selected instructor's command center.</p>
+				</div>
+				<form id="studentForm">
+					<div class="two-col">
+						<div class="field">
+							<label for="studentFirstName">First Name</label>
+							<input id="studentFirstName" name="firstName" type="text" maxlength="80" required>
+						</div>
+						<div class="field">
+							<label for="studentLastName">Last Name</label>
+							<input id="studentLastName" name="lastName" type="text" maxlength="80" required>
+						</div>
+					</div>
+					<div class="field">
+						<label for="studentEmail">Email</label>
+						<input id="studentEmail" name="email" type="email" maxlength="160" required>
+					</div>
+					<div class="field">
+						<label for="studentPassword">Password</label>
+						<input id="studentPassword" name="password" type="password" minlength="8" required>
+					</div>
+					<div class="field">
+						<label for="supervisorId">Supervisor</label>
+						<select id="supervisorId" name="supervisorId" required>
+							<option value="">Loading instructors...</option>
+						</select>
+					</div>
+					<button id="studentSubmit" class="action" type="submit">Create Student Account</button>
+				</form>
+				<div id="studentStatus" class="status">Supervisor list is loaded directly from MySQL.</div>
+			</article>
+
+			<article id="teacher" class="card">
+				<div>
+					<div class="kicker">Instructor Pathway</div>
+					<h2>Generate Teaching Identity</h2>
+					<p>Instructor accounts receive a unique teacher ID for command-center authentication.</p>
+				</div>
+				<form id="teacherForm">
+					<div class="two-col">
+						<div class="field">
+							<label for="teacherFirstName">First Name</label>
+							<input id="teacherFirstName" name="firstName" type="text" maxlength="80" required>
+						</div>
+						<div class="field">
+							<label for="teacherLastName">Last Name</label>
+							<input id="teacherLastName" name="lastName" type="text" maxlength="80" required>
+						</div>
+					</div>
+					<div class="field">
+						<label for="teacherEmail">Email</label>
+						<input id="teacherEmail" name="email" type="email" maxlength="160" required>
+					</div>
+					<button id="teacherSubmit" class="action" type="submit">Register Instructor</button>
+				</form>
+				<div id="teacherStatus" class="status">A unique teacher ID and temporary password will be generated after registration.</div>
+			</article>
+		</section>
+	</main>
+
+	<script>
+		const teacherSelect = document.getElementById("supervisorId");
+		const studentForm = document.getElementById("studentForm");
+		const teacherForm = document.getElementById("teacherForm");
+		const studentStatus = document.getElementById("studentStatus");
+		const teacherStatus = document.getElementById("teacherStatus");
+		const studentSubmit = document.getElementById("studentSubmit");
+		const teacherSubmit = document.getElementById("teacherSubmit");
+
+		document.addEventListener("DOMContentLoaded", loadTeachers);
+		studentForm.addEventListener("submit", registerStudent);
+		teacherForm.addEventListener("submit", registerTeacher);
+
+		async function loadTeachers() {
+			setStatus(studentStatus, "Loading instructor directory...", "");
+			try {
+				const response = await fetch("/api/public/teachers", { headers: { "Accept": "application/json" } });
+				const teachers = await readJson(response);
+				if (!response.ok) {
+					throw new Error("Unable to load instructor directory.");
+				}
+
+				teacherSelect.innerHTML = "";
+				if (!teachers.length) {
+					teacherSelect.innerHTML = '<option value="">No instructors registered yet</option>';
+					setStatus(studentStatus, "Register an instructor before creating student accounts.", "warn");
+					return;
+				}
+
+				teacherSelect.insertAdjacentHTML("beforeend", '<option value="">Select supervisor</option>');
+				for (const teacher of teachers) {
+					const option = document.createElement("option");
+					option.value = teacher.id;
+					option.textContent = `${teacher.firstName || ""} ${teacher.lastName || ""}`.trim() || `Instructor #${teacher.id}`;
+					teacherSelect.appendChild(option);
+				}
+				setStatus(studentStatus, "Instructor directory ready.", "good");
+			} catch (error) {
+				teacherSelect.innerHTML = '<option value="">Supervisor list unavailable</option>';
+				setStatus(studentStatus, error.message, "bad");
+			}
+		}
+
+		async function registerStudent(event) {
+			event.preventDefault();
+			await submitForm(studentForm, "/api/public/register/student", studentSubmit, studentStatus, (payload) => {
+				setStatus(studentStatus, `${payload.message} Login email: ${payload.email}`, "good");
+				studentForm.reset();
+				loadTeachers();
+			});
+		}
+
+		async function registerTeacher(event) {
+			event.preventDefault();
+			await submitForm(teacherForm, "/api/public/register/teacher", teacherSubmit, teacherStatus, (payload) => {
+				setStatus(
+					teacherStatus,
+					`Instructor created. Unique ID: ${payload.uniqueTeacherId}. Temporary password: ${payload.temporaryPassword}`,
+					"good"
+				);
+				teacherForm.reset();
+				loadTeachers();
+			});
+		}
+
+		async function submitForm(form, url, button, statusNode, onSuccess) {
+			button.disabled = true;
+			setStatus(statusNode, "Submitting registration request...", "");
+			try {
+				const response = await fetch(url, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded",
+						"Accept": "application/json"
+					},
+					body: new URLSearchParams(new FormData(form))
+				});
+				const payload = await readJson(response);
+				if (!response.ok) {
+					throw new Error(payload.message || "Registration failed.");
+				}
+
+				onSuccess(payload);
+			} catch (error) {
+				setStatus(statusNode, error.message, "bad");
+			} finally {
+				button.disabled = false;
+			}
+		}
+
+		function setStatus(node, message, tone) {
+			node.textContent = message;
+			node.classList.remove("good", "bad", "warn");
+			if (tone) {
+				node.classList.add(tone);
+			}
+		}
+
+		async function readJson(response) {
+			const text = await response.text();
+			return text ? JSON.parse(text) : {};
+		}
+	</script>
+</body>
+</html>

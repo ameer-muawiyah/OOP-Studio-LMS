@@ -28,7 +28,8 @@ public class SecurityConfig {
 		return http
 				.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
 				.authorizeHttpRequests(authorize -> authorize
-						.requestMatchers("/", "/css/**", "/js/**", "/login", "/error").permitAll()
+						.requestMatchers("/", "/css/**", "/js/**", "/login", "/register", "/error").permitAll()
+						.requestMatchers("/api/public/**").permitAll()
 						.requestMatchers("/instructor/**", "/api/instructor/**").hasRole("TEACHER")
 						.anyRequest().authenticated()
 				)

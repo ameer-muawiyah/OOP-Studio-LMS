@@ -36,6 +36,7 @@ public class InstructorController {
 	) {
 		User teacher = resolveAuthenticatedTeacher(authentication);
 		List<QuizResult> results = quizResultRepository.findByStudentSupervisorIdOrderByCompletedAtDesc(teacher.getId());
+		List<User> assignedStudents = userRepository.findBySupervisorId(teacher.getId());
 		Double averageScore = quizResultRepository.calculateAverageScoreForSupervisor(teacher.getId());
 		Integer highestScore = quizResultRepository.findMaximumScoreForSupervisor(teacher.getId());
 
@@ -45,6 +46,7 @@ public class InstructorController {
 		model.addAttribute("highestScore", highestScore == null ? 0 : highestScore);
 		model.addAttribute("teacherName", buildTeacherName(teacher));
 		model.addAttribute("teacherId", teacher.getUniqueTeacherId());
+		model.addAttribute("rosterStudents", buildRosterRows(assignedStudents));
 
 		return "instructor-dashboard";
 	}
@@ -69,5 +71,53 @@ public class InstructorController {
 		String lastName = teacher.getLastName() == null ? "" : teacher.getLastName().trim();
 		String fullName = (firstName + " " + lastName).trim();
 		return fullName.isBlank() ? teacher.getUniqueTeacherId() : fullName;
+	}
+
+	private List<StudentRosterRow> buildRosterRows(List<User> assignedStudents) {
+		return assignedStudents.stream()
+				.map(student -> {
+					List<QuizResult> recentResults = quizResultRepository.findTop10ByStudentIdOrderByIdDesc(student.getId());
+					return new StudentRosterRow(
+							buildStudentName(student),
+							student.getEmail(),
+							recentResults.size(),
+							formatRollingAccuracy(recentResults)
+					);
+				})
+				.toList();
+	}
+
+	private String buildStudentName(User student) {
+		String firstName = student.getFirstName() == null ? "" : student.getFirstName().trim();
+		String lastName = student.getLastName() == null ? "" : student.getLastName().trim();
+		String fullName = (firstName + " " + lastName).trim();
+		return fullName.isBlank() ? student.getEmail() : fullName;
+	}
+
+	private String formatRollingAccuracy(List<QuizResult> recentResults) {
+		int totalQuestions = recentResults.stream()
+				.map(QuizResult::getTotalQuestions)
+				.filter(java.util.Objects::nonNull)
+				.mapToInt(Integer::intValue)
+				.sum();
+		if (totalQuestions == 0) {
+			return "No sessions recorded";
+		}
+
+		int totalScore = recentResults.stream()
+				.map(QuizResult::getScore)
+				.filter(java.util.Objects::nonNull)
+				.mapToInt(Integer::intValue)
+				.sum();
+		double rollingAccuracy = (totalScore * 100.0) / totalQuestions;
+		return String.format(Locale.ROOT, "%.1f%%", rollingAccuracy);
+	}
+
+	public record StudentRosterRow(
+			String fullName,
+			String email,
+			int attemptCount,
+			String rollingAccuracy
+	) {
 	}
 }

@@ -124,6 +124,11 @@
 			justify-content: flex-end;
 		}
 
+		button {
+			font: inherit;
+		}
+
+		.roster-button,
 		.sign-out-link {
 			min-height: 36px;
 			display: inline-flex;
@@ -140,10 +145,97 @@
 			transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
 		}
 
+		.roster-button {
+			border-color: rgba(16, 185, 129, 0.7);
+			background: linear-gradient(90deg, rgba(16, 185, 129, 0.22), rgba(52, 211, 153, 0.14));
+			color: var(--emerald-bright);
+			cursor: pointer;
+		}
+
+		.roster-button:hover,
 		.sign-out-link:hover {
 			border-color: var(--emerald);
 			background: var(--emerald-soft);
 			color: var(--emerald-bright);
+		}
+
+		.roster-dialog {
+			width: min(920px, calc(100vw - 28px));
+			max-height: min(760px, calc(100vh - 28px));
+			padding: 0;
+			border: 1px solid rgba(16, 185, 129, 0.56);
+			border-radius: 8px;
+			background: var(--panel);
+			color: var(--text);
+			box-shadow: var(--shadow);
+			overflow: hidden;
+		}
+
+		.roster-dialog::backdrop {
+			background: rgba(0, 0, 0, 0.72);
+			backdrop-filter: blur(5px);
+		}
+
+		.roster-modal-shell {
+			display: grid;
+			grid-template-rows: auto minmax(0, 1fr);
+			max-height: inherit;
+		}
+
+		.roster-modal-header {
+			padding: 20px;
+			border-bottom: 1px solid var(--line);
+			background: #111111;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+		}
+
+		.roster-modal-header h2 {
+			margin: 0;
+			font-size: 1.15rem;
+			text-transform: uppercase;
+		}
+
+		.close-button {
+			min-height: 36px;
+			padding: 8px 12px;
+			border: 1px solid var(--line-strong);
+			border-radius: 8px;
+			background: #101010;
+			color: var(--muted);
+			font-weight: 900;
+			cursor: pointer;
+			text-transform: uppercase;
+		}
+
+		.close-button:hover {
+			border-color: var(--emerald);
+			color: var(--emerald-bright);
+		}
+
+		.roster-table-wrap {
+			overflow: auto;
+		}
+
+		.accuracy-pill {
+			display: inline-flex;
+			align-items: center;
+			min-height: 30px;
+			padding: 5px 10px;
+			border: 1px solid rgba(16, 185, 129, 0.58);
+			border-radius: 999px;
+			background: var(--emerald-soft);
+			color: var(--emerald-bright);
+			font-weight: 900;
+			white-space: nowrap;
+		}
+
+		.accuracy-pill.empty {
+			border-color: var(--line-strong);
+			background: #101010;
+			color: var(--muted);
 		}
 
 		.stats-grid {
@@ -305,6 +397,7 @@
 			</div>
 			<div class="header-actions">
 				<div class="live-chip">Assigned Students Only</div>
+				<button id="openRosterButton" class="roster-button" type="button">View Assigned Student Roster</button>
 				<a class="sign-out-link" href="/logout">Sign Out</a>
 			</div>
 		</header>
@@ -362,5 +455,66 @@
 			</div>
 		</section>
 	</div>
+
+	<dialog id="studentRosterDialog" class="roster-dialog" aria-labelledby="studentRosterTitle">
+		<div class="roster-modal-shell">
+			<header class="roster-modal-header">
+				<div>
+					<h2 id="studentRosterTitle">Assigned Student Roster</h2>
+					<p>Rolling accuracy is calculated from each student's latest 10 completed adaptive sessions.</p>
+				</div>
+				<button id="closeRosterButton" class="close-button" type="button">Close</button>
+			</header>
+
+			<div class="roster-table-wrap" th:if="${!#lists.isEmpty(rosterStudents)}">
+				<table>
+					<thead>
+						<tr>
+							<th>Student Full Name</th>
+							<th>Email Address</th>
+							<th>Recent Attempts</th>
+							<th>Past 10-Session Rolling Accuracy</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="student : ${rosterStudents}">
+							<td th:text="${student.fullName}">Student Name</td>
+							<td th:text="${student.email}">student@example.com</td>
+							<td th:text="${student.attemptCount}">0</td>
+							<td>
+								<span class="accuracy-pill"
+									  th:classappend="${student.attemptCount == 0} ? ' empty' : ''"
+									  th:text="${student.rollingAccuracy}">No sessions recorded</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="empty-state" th:if="${#lists.isEmpty(rosterStudents)}">
+				No students are currently assigned to your instructor profile.
+			</div>
+		</div>
+	</dialog>
+
+	<script>
+		const rosterDialog = document.getElementById("studentRosterDialog");
+		const openRosterButton = document.getElementById("openRosterButton");
+		const closeRosterButton = document.getElementById("closeRosterButton");
+
+		openRosterButton.addEventListener("click", () => {
+			if (typeof rosterDialog.showModal === "function") {
+				rosterDialog.showModal();
+			}
+		});
+
+		closeRosterButton.addEventListener("click", () => rosterDialog.close());
+
+		rosterDialog.addEventListener("click", (event) => {
+			if (event.target === rosterDialog) {
+				rosterDialog.close();
+			}
+		});
+	</script>
 </body>
 </html>

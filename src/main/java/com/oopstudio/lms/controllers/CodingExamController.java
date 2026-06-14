@@ -73,6 +73,7 @@ public class CodingExamController {
 				.<ResponseEntity<?>>map(question -> {
 					CodeExecutionResult executionResult = codeExecutionService.executeCode(
 							studentSourceCode,
+							question.getTitle(),
 							question.getTestCasesJson()
 					);
 					return ResponseEntity.ok(new RunCodeResponse(

@@ -20,6 +20,8 @@
 			--emerald-soft: rgba(16, 185, 129, 0.14);
 			--danger: #fb7185;
 			--warning: #fbbf24;
+			--timer-warning: #f59e0b;
+			--timer-critical: #ef4444;
 			--shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
 			font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 		}
@@ -232,6 +234,14 @@
 			font-size: 0.94rem;
 		}
 
+		.header-status {
+			display: flex;
+			align-items: stretch;
+			justify-content: flex-end;
+			gap: 12px;
+			flex-wrap: wrap;
+		}
+
 		.counter-card {
 			min-width: 240px;
 			padding: 16px;
@@ -242,16 +252,94 @@
 			gap: 10px;
 		}
 
-		.counter-card span {
+		.timer-card {
+			min-width: 230px;
+			padding: 16px;
+			border: 1px solid rgba(16, 185, 129, 0.64);
+			border-radius: 8px;
+			background: linear-gradient(180deg, rgba(16, 185, 129, 0.16), rgba(20, 20, 20, 0.98));
+			display: grid;
+			gap: 10px;
+			transition: border-color 220ms ease, box-shadow 220ms ease, background 220ms ease;
+		}
+
+		.counter-card span,
+		.timer-card span {
 			color: var(--muted);
 			font-size: 0.75rem;
 			font-weight: 800;
 			text-transform: uppercase;
 		}
 
-		.counter-card strong {
+		.counter-card strong,
+		.timer-card strong {
 			font-size: 1.65rem;
 			line-height: 1;
+		}
+
+		.timer-card strong {
+			color: var(--emerald-bright);
+			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+			letter-spacing: 0;
+			transition: color 220ms ease, text-shadow 220ms ease;
+		}
+
+		.timer-track {
+			height: 8px;
+			border: 1px solid rgba(16, 185, 129, 0.32);
+			border-radius: 999px;
+			background: #090909;
+			overflow: hidden;
+		}
+
+		.timer-fill {
+			width: 100%;
+			height: 100%;
+			border-radius: inherit;
+			background: linear-gradient(90deg, var(--emerald), var(--emerald-bright));
+			box-shadow: 0 0 22px rgba(16, 185, 129, 0.42);
+			transition: width 1s linear, background 220ms ease, box-shadow 220ms ease;
+		}
+
+		.timer-card.warning {
+			border-color: rgba(245, 158, 11, 0.76);
+			background: linear-gradient(180deg, rgba(245, 158, 11, 0.18), rgba(20, 20, 20, 0.98));
+		}
+
+		.timer-card.warning strong {
+			color: var(--timer-warning);
+			text-shadow: 0 0 22px rgba(245, 158, 11, 0.26);
+		}
+
+		.timer-card.warning .timer-fill {
+			background: linear-gradient(90deg, var(--timer-warning), var(--warning));
+			box-shadow: 0 0 24px rgba(245, 158, 11, 0.4);
+		}
+
+		.timer-card.critical {
+			border-color: rgba(239, 68, 68, 0.82);
+			background: linear-gradient(180deg, rgba(239, 68, 68, 0.18), rgba(20, 20, 20, 0.98));
+			box-shadow: 0 0 28px rgba(239, 68, 68, 0.18), var(--shadow);
+		}
+
+		.timer-card.critical strong {
+			color: var(--timer-critical);
+			animation: timerFlash 720ms ease-in-out infinite alternate;
+		}
+
+		.timer-card.critical .timer-fill {
+			background: linear-gradient(90deg, #f87171, var(--timer-critical));
+			box-shadow: 0 0 28px rgba(239, 68, 68, 0.58);
+		}
+
+		@keyframes timerFlash {
+			from {
+				text-shadow: 0 0 10px rgba(239, 68, 68, 0.38);
+			}
+
+			to {
+				text-shadow: 0 0 26px rgba(239, 68, 68, 0.95);
+			}
 		}
 
 		.progress-track {
@@ -405,6 +493,17 @@
 			border-color: var(--emerald);
 			background: var(--emerald);
 			color: #03130d;
+		}
+
+		.option-block.locked {
+			cursor: not-allowed;
+			opacity: 0.72;
+		}
+
+		.option-block.locked:hover {
+			transform: none;
+			border-color: var(--line);
+			background: var(--panel-soft);
 		}
 
 		.action-row {
@@ -633,7 +732,14 @@
 				flex-direction: column;
 			}
 
-			.counter-card {
+			.header-status {
+				width: 100%;
+				justify-content: stretch;
+			}
+
+			.counter-card,
+			.timer-card {
+				flex: 1 1 230px;
 				min-width: 0;
 			}
 
@@ -673,13 +779,22 @@
 				<h1>OOP Studio | Adaptive Practice Panel</h1>
 				<p>Quantum Developer training interface for adaptive OOP multiple-choice practice.</p>
 			</div>
-			<aside class="counter-card" aria-label="Question counter">
-				<span>Question Counter</span>
-				<strong><span id="answeredCount">0</span>/<span id="maxQuestions">9</span></strong>
-				<div class="progress-track" aria-hidden="true">
-					<div id="progressBar" class="progress-bar"></div>
-				</div>
-			</aside>
+			<div class="header-status">
+				<aside id="examTimer" class="timer-card" aria-label="Exam timer">
+					<span>Session Timer</span>
+					<strong id="timerDisplay">20:00</strong>
+					<div class="timer-track" aria-hidden="true">
+						<div id="timerFill" class="timer-fill"></div>
+					</div>
+				</aside>
+				<aside class="counter-card" aria-label="Question counter">
+					<span>Question Counter</span>
+					<strong><span id="answeredCount">0</span>/<span id="maxQuestions">9</span></strong>
+					<div class="progress-track" aria-hidden="true">
+						<div id="progressBar" class="progress-bar"></div>
+					</div>
+				</aside>
+			</div>
 		</header>
 
 		<main class="layout-grid">
@@ -766,11 +881,20 @@
 	</div>
 
 	<script>
+		const EXAM_DURATION_SECONDS = 20 * 60;
+
 		const sessionState = {
 			activeQuestionId: null,
 			maxQuestions: 9,
 			busy: false,
-			completed: false
+			completed: false,
+			timedOut: false,
+			hasTimerStarted: false
+		};
+
+		const timerState = {
+			remainingSeconds: EXAM_DURATION_SECONDS,
+			intervalId: null
 		};
 
 		const dom = {
@@ -789,6 +913,9 @@
 			optionD: document.getElementById("optionD"),
 			difficultyChip: document.getElementById("difficultyChip"),
 			topicChip: document.getElementById("topicChip"),
+			examTimer: document.getElementById("examTimer"),
+			timerDisplay: document.getElementById("timerDisplay"),
+			timerFill: document.getElementById("timerFill"),
 			answeredCount: document.getElementById("answeredCount"),
 			maxQuestions: document.getElementById("maxQuestions"),
 			progressBar: document.getElementById("progressBar"),
@@ -814,9 +941,12 @@
 		});
 
 		async function startExam() {
-			setBusy(true, "Starting");
 			sessionState.completed = false;
+			sessionState.timedOut = false;
+			sessionState.hasTimerStarted = false;
 			sessionState.activeQuestionId = null;
+			resetExamTimer();
+			setBusy(true, "Starting");
 
 			try {
 				const response = await fetch("/api/exam/start", { method: "GET" });
@@ -844,14 +974,18 @@
 			}
 		}
 
-		async function submitAnswer(event) {
+		async function submitAnswer(event, options = {}) {
 			event.preventDefault();
-			if (sessionState.busy || sessionState.completed) {
+			if ((sessionState.busy && !options.forceSubmit) || sessionState.completed) {
 				return;
 			}
 
 			const selectedOption = document.querySelector("input[name='selectedOption']:checked");
 			if (!selectedOption) {
+				if (options.forceComplete) {
+					await renderTimedOutResults("TIME_EXPIRED_NO_SELECTION", "Time expired before an answer was selected.");
+					return;
+				}
 				dom.validationMessage.textContent = "Select an option before submitting.";
 				return;
 			}
@@ -883,8 +1017,15 @@
 					payload.correct ? "good" : "bad"
 				);
 
-				if (payload.completed || !payload.nextQuestion) {
-					await renderResults(payload);
+				if (options.forceComplete || sessionState.timedOut || payload.completed || !payload.nextQuestion) {
+					await renderResults(options.forceComplete || sessionState.timedOut
+							? {
+								...payload,
+								completed: true,
+								completionReason: "TIME_EXPIRED",
+								message: "Time expired. Current answer was recorded as the final submission."
+							}
+							: payload);
 					return;
 				}
 
@@ -894,7 +1035,7 @@
 				setFeedback("The answer could not be submitted.", "bad");
 			} finally {
 				if (!sessionState.completed) {
-					setBusy(false, "Active");
+					setBusy(false, sessionState.timedOut ? "Time Expired" : "Active");
 				}
 			}
 		}
@@ -923,6 +1064,18 @@
 			dom.progressBar.style.width = `${Math.min(100, Math.round((safeAnswered / safeMax) * 100))}%`;
 		}
 
+		async function renderTimedOutResults(reasonCode, message) {
+			await renderResults({
+				score: Number(dom.scoreMetric.textContent) || 0,
+				answeredCount: Number(dom.answeredCount.textContent) || 0,
+				maxQuestions: sessionState.maxQuestions,
+				currentDifficulty: dom.stateMetric.textContent,
+				completed: true,
+				completionReason: reasonCode || "TIME_EXPIRED",
+				message
+			});
+		}
+
 		async function renderResults(lastPayload) {
 			let results = null;
 			try {
@@ -938,13 +1091,14 @@
 			const accuracy = results?.accuracyPercent ?? (answered === 0 ? 0 : Math.round((score * 10000) / answered) / 100);
 			const difficulty = results?.currentDifficulty ?? lastPayload.currentDifficulty ?? "N/A";
 
+			stopExamTimer();
 			sessionState.completed = true;
 			sessionState.activeQuestionId = null;
 			dom.questionCard.classList.add("hidden");
 			dom.resultsView.classList.add("visible");
 			dom.finalScore.textContent = String(score);
 			dom.finalMax.textContent = String(max);
-			dom.finalMessage.textContent = lastPayload.completionReason || "Session complete";
+			dom.finalMessage.textContent = lastPayload.message || lastPayload.completionReason || "Session complete";
 			dom.accuracyMetric.textContent = `${accuracy}%`;
 			dom.answeredMetric.textContent = `${answered}/${max}`;
 			dom.finalDifficulty.textContent = difficulty;
@@ -954,6 +1108,7 @@
 		}
 
 		function renderUnavailableState(payload) {
+			stopExamTimer();
 			sessionState.completed = true;
 			dom.questionCard.classList.add("hidden");
 			dom.resultsView.classList.add("visible");
@@ -968,6 +1123,7 @@
 		}
 
 		function renderFatalError(error) {
+			stopExamTimer();
 			sessionState.completed = true;
 			dom.questionCard.classList.add("hidden");
 			dom.resultsView.classList.add("visible");
@@ -989,8 +1145,14 @@
 		}
 
 		function selectOption(selectedCard) {
+			const input = selectedCard.querySelector("input[type='radio']");
+			if (input.disabled) {
+				return;
+			}
+
 			dom.optionCards.forEach((card) => card.classList.toggle("selected", card === selectedCard));
 			dom.validationMessage.textContent = "";
+			startExamTimerOnce();
 		}
 
 		function clearSelection() {
@@ -999,10 +1161,94 @@
 			dom.validationMessage.textContent = "";
 		}
 
+		function resetExamTimer() {
+			stopExamTimer();
+			timerState.remainingSeconds = EXAM_DURATION_SECONDS;
+			updateExamTimerDisplay();
+		}
+
+		function startExamTimerOnce() {
+			if (
+					sessionState.hasTimerStarted
+					|| sessionState.completed
+					|| sessionState.timedOut
+					|| sessionState.activeQuestionId === null
+			) {
+				return;
+			}
+
+			sessionState.hasTimerStarted = true;
+			startExamTimer();
+		}
+
+		function startExamTimer() {
+			stopExamTimer();
+			timerState.remainingSeconds = EXAM_DURATION_SECONDS;
+			updateExamTimerDisplay();
+			timerState.intervalId = window.setInterval(() => {
+				timerState.remainingSeconds = Math.max(timerState.remainingSeconds - 1, 0);
+				updateExamTimerDisplay();
+				if (timerState.remainingSeconds === 0) {
+					stopExamTimer();
+					handleExamTimerExpired();
+				}
+			}, 1000);
+		}
+
+		function stopExamTimer() {
+			if (timerState.intervalId !== null) {
+				window.clearInterval(timerState.intervalId);
+				timerState.intervalId = null;
+			}
+		}
+
+		function updateExamTimerDisplay() {
+			const remaining = Math.max(timerState.remainingSeconds, 0);
+			const percentRemaining = (remaining / EXAM_DURATION_SECONDS) * 100;
+			dom.timerDisplay.textContent = formatTimerValue(remaining);
+			dom.timerFill.style.width = `${percentRemaining}%`;
+			dom.examTimer.classList.toggle("warning", remaining <= 5 * 60 && remaining > 60);
+			dom.examTimer.classList.toggle("critical", remaining <= 60);
+		}
+
+		function formatTimerValue(totalSeconds) {
+			const minutes = Math.floor(totalSeconds / 60);
+			const seconds = totalSeconds % 60;
+			return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+		}
+
+		async function handleExamTimerExpired() {
+			if (sessionState.completed) {
+				return;
+			}
+
+			const activeSubmissionInFlight = sessionState.busy;
+			sessionState.timedOut = true;
+			setBusy(true, "Time Expired");
+			setFeedback("Time expired. Auto-submitting the current answer.", "bad");
+			dom.validationMessage.textContent = "Time expired. Auto-submitting the current answer.";
+			if (activeSubmissionInFlight) {
+				setFeedback("Time expired. The active submission is locked as final.", "bad");
+				dom.validationMessage.textContent = "Time expired. The active submission is locked as final.";
+				return;
+			}
+			await submitAnswer({ preventDefault() {} }, { forceComplete: true, forceSubmit: true });
+		}
+
 		function setBusy(isBusy, stateLabel) {
 			sessionState.busy = isBusy;
-			dom.submitButton.disabled = isBusy || sessionState.completed || sessionState.activeQuestionId === null;
+			const controlsDisabled = isBusy || sessionState.completed || sessionState.timedOut;
+			dom.submitButton.disabled = controlsDisabled || sessionState.activeQuestionId === null;
+			setOptionControlsDisabled(controlsDisabled);
 			dom.stateMetric.textContent = stateLabel;
+		}
+
+		function setOptionControlsDisabled(disabled) {
+			dom.optionCards.forEach((card) => {
+				card.classList.toggle("locked", disabled);
+				const input = card.querySelector("input[type='radio']");
+				input.disabled = disabled;
+			});
 		}
 
 		function setFeedback(message, tone) {

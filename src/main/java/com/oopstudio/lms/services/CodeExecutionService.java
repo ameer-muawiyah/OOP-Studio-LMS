@@ -43,15 +43,37 @@ public class CodeExecutionService {
 
 	private static final int TEST_TIMEOUT_SECONDS = 2;
 	private static final String SOLVE_METHOD_NAME = "solve";
+	private static final String SUM_OF_TWO_NUMBERS_TEST_CASES = """
+			[
+				{"input":"5,7","expected":"12"},
+				{"input":"0,0","expected":"0"},
+				{"input":"-3,9","expected":"6"},
+				{"input":"10,-4","expected":"6"},
+				{"input":"100,250","expected":"350"}
+			]
+			""";
+	private static final String EVEN_OR_ODD_TEST_CASES = """
+			[
+				{"input":"4","expected":"Even"},
+				{"input":"7","expected":"Odd"},
+				{"input":"0","expected":"Even"},
+				{"input":"-2","expected":"Even"},
+				{"input":"15","expected":"Odd"}
+			]
+			""";
 
 	public CodeExecutionResult executeCode(String studentCode, String testCasesJson) {
+		return executeCode(studentCode, null, testCasesJson);
+	}
+
+	public CodeExecutionResult executeCode(String studentCode, String challengeTitle, String testCasesJson) {
 		if (studentCode == null || studentCode.isBlank()) {
 			return CodeExecutionResult.rejected("Student code must not be blank.");
 		}
 
 		List<TestCase> testCases;
 		try {
-			testCases = TestCaseParser.parse(testCasesJson);
+			testCases = TestCaseParser.parse(resolveTestCasesJson(challengeTitle, testCasesJson));
 		} catch (IllegalArgumentException exception) {
 			return CodeExecutionResult.rejected("Invalid testCasesJson: " + exception.getMessage());
 		}
@@ -126,6 +148,22 @@ public class CodeExecutionService {
 		} finally {
 			deleteDirectoryQuietly(compilationDirectory);
 		}
+	}
+
+	private String resolveTestCasesJson(String challengeTitle, String testCasesJson) {
+		if (testCasesJson != null && !testCasesJson.isBlank()) {
+			return testCasesJson;
+		}
+
+		return switch (normalizeChallengeTitle(challengeTitle)) {
+			case "sum of two numbers" -> SUM_OF_TWO_NUMBERS_TEST_CASES;
+			case "even or odd" -> EVEN_OR_ODD_TEST_CASES;
+			default -> testCasesJson;
+		};
+	}
+
+	private String normalizeChallengeTitle(String challengeTitle) {
+		return challengeTitle == null ? "" : challengeTitle.trim().toLowerCase(Locale.ROOT);
 	}
 
 	private SubmissionSource prepareSubmissionSource(String studentCode) {

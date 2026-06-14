@@ -21,6 +21,8 @@
 			--red: #fb7185;
 			--red-soft: rgba(251, 113, 133, 0.12);
 			--amber: #fbbf24;
+			--timer-warning: #f59e0b;
+			--timer-critical: #ef4444;
 			--shadow: 0 28px 90px rgba(0, 0, 0, 0.5);
 			font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 		}
@@ -146,6 +148,14 @@
 			font-size: 0.94rem;
 		}
 
+		.topbar-status {
+			display: flex;
+			align-items: stretch;
+			justify-content: flex-end;
+			gap: 12px;
+			flex-wrap: wrap;
+		}
+
 		.status-card {
 			min-width: 238px;
 			padding: 14px;
@@ -156,16 +166,94 @@
 			gap: 8px;
 		}
 
-		.status-card span {
+		.timer-card {
+			min-width: 230px;
+			padding: 14px;
+			border: 1px solid rgba(16, 185, 129, 0.58);
+			border-radius: 8px;
+			background: linear-gradient(180deg, rgba(16, 185, 129, 0.14), rgba(20, 20, 20, 0.98));
+			display: grid;
+			gap: 8px;
+			transition: border-color 220ms ease, box-shadow 220ms ease, background 220ms ease;
+		}
+
+		.status-card span,
+		.timer-card span {
 			color: var(--muted);
 			font-size: 0.76rem;
 			font-weight: 850;
 			text-transform: uppercase;
 		}
 
-		.status-card strong {
+		.status-card strong,
+		.timer-card strong {
 			font-size: 1.2rem;
 			overflow-wrap: anywhere;
+		}
+
+		.timer-card strong {
+			color: var(--emerald-bright);
+			font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+			letter-spacing: 0;
+			transition: color 220ms ease, text-shadow 220ms ease;
+		}
+
+		.timer-track {
+			height: 8px;
+			border: 1px solid rgba(16, 185, 129, 0.32);
+			border-radius: 999px;
+			background: #090909;
+			overflow: hidden;
+		}
+
+		.timer-fill {
+			width: 100%;
+			height: 100%;
+			border-radius: inherit;
+			background: linear-gradient(90deg, var(--emerald), var(--emerald-bright));
+			box-shadow: 0 0 22px rgba(16, 185, 129, 0.42);
+			transition: width 1s linear, background 220ms ease, box-shadow 220ms ease;
+		}
+
+		.timer-card.warning {
+			border-color: rgba(245, 158, 11, 0.76);
+			background: linear-gradient(180deg, rgba(245, 158, 11, 0.18), rgba(20, 20, 20, 0.98));
+		}
+
+		.timer-card.warning strong {
+			color: var(--timer-warning);
+			text-shadow: 0 0 22px rgba(245, 158, 11, 0.26);
+		}
+
+		.timer-card.warning .timer-fill {
+			background: linear-gradient(90deg, var(--timer-warning), var(--amber));
+			box-shadow: 0 0 24px rgba(245, 158, 11, 0.4);
+		}
+
+		.timer-card.critical {
+			border-color: rgba(239, 68, 68, 0.82);
+			background: linear-gradient(180deg, rgba(239, 68, 68, 0.18), rgba(20, 20, 20, 0.98));
+			box-shadow: 0 0 28px rgba(239, 68, 68, 0.18), var(--shadow);
+		}
+
+		.timer-card.critical strong {
+			color: var(--timer-critical);
+			animation: timerFlash 720ms ease-in-out infinite alternate;
+		}
+
+		.timer-card.critical .timer-fill {
+			background: linear-gradient(90deg, #f87171, var(--timer-critical));
+			box-shadow: 0 0 28px rgba(239, 68, 68, 0.58);
+		}
+
+		@keyframes timerFlash {
+			from {
+				text-shadow: 0 0 10px rgba(239, 68, 68, 0.38);
+			}
+
+			to {
+				text-shadow: 0 0 26px rgba(239, 68, 68, 0.95);
+			}
 		}
 
 		.main-grid {
@@ -356,6 +444,7 @@
 		}
 
 		.editor-frame {
+			position: relative;
 			min-height: 0;
 			display: grid;
 			grid-template-columns: 54px minmax(0, 1fr);
@@ -388,6 +477,68 @@
 			font-size: 0.96rem;
 			line-height: 1.6;
 			tab-size: 4;
+		}
+
+		.editor-lock-overlay {
+			position: absolute;
+			inset: 0;
+			z-index: 5;
+			display: grid;
+			place-items: center;
+			padding: 24px;
+			background:
+				linear-gradient(135deg, rgba(16, 185, 129, 0.16), transparent 36%),
+				rgba(6, 8, 8, 0.9);
+			border-top: 1px solid rgba(16, 185, 129, 0.24);
+			backdrop-filter: blur(6px);
+		}
+
+		.editor-lock-overlay.hidden {
+			display: none;
+		}
+
+		.start-test-panel {
+			width: min(360px, 100%);
+			padding: 22px;
+			border: 1px solid rgba(16, 185, 129, 0.58);
+			border-radius: 8px;
+			background: rgba(17, 17, 17, 0.96);
+			box-shadow: 0 22px 60px rgba(0, 0, 0, 0.46);
+			display: grid;
+			gap: 14px;
+			text-align: center;
+		}
+
+		.start-test-panel strong {
+			font-size: 1.1rem;
+			line-height: 1.2;
+		}
+
+		.start-test-panel span {
+			color: var(--muted);
+			font-size: 0.92rem;
+			line-height: 1.45;
+		}
+
+		.start-test-button {
+			min-height: 46px;
+			border: 1px solid var(--emerald);
+			border-radius: 8px;
+			background: linear-gradient(90deg, var(--emerald), var(--emerald-bright));
+			color: #04130d;
+			font-weight: 900;
+			cursor: pointer;
+			box-shadow: 0 16px 38px rgba(16, 185, 129, 0.24);
+			transition: transform 160ms ease, opacity 160ms ease;
+		}
+
+		.start-test-button:hover:not(:disabled) {
+			transform: translateY(-1px);
+		}
+
+		.start-test-button:disabled {
+			cursor: not-allowed;
+			opacity: 0.58;
 		}
 
 		.validation {
@@ -581,7 +732,14 @@
 				flex-direction: column;
 			}
 
-			.status-card {
+			.topbar-status {
+				width: 100%;
+				justify-content: stretch;
+			}
+
+			.status-card,
+			.timer-card {
+				flex: 1 1 230px;
 				min-width: 0;
 			}
 
@@ -626,10 +784,19 @@
 				<h1>OOP Studio | Code Runner Workspace</h1>
 				<p>Practical Java examiner connected to the local compiler engine.</p>
 			</div>
-			<aside class="status-card" aria-label="Execution status">
-				<span>Compiler Status</span>
-				<strong id="workspaceStatus">Loading Challenge</strong>
-			</aside>
+			<div class="topbar-status">
+				<aside id="examTimer" class="timer-card" aria-label="Exam timer">
+					<span>Session Timer</span>
+					<strong id="timerDisplay">20:00</strong>
+					<div class="timer-track" aria-hidden="true">
+						<div id="timerFill" class="timer-fill"></div>
+					</div>
+				</aside>
+				<aside class="status-card" aria-label="Execution status">
+					<span>Compiler Status</span>
+					<strong id="workspaceStatus">Loading Challenge</strong>
+				</aside>
+			</div>
 		</header>
 
 		<main class="main-grid">
@@ -678,7 +845,14 @@
 
 					<div class="editor-frame">
 						<pre id="lineRail" class="line-rail" aria-hidden="true">1</pre>
-						<textarea id="sourceEditor" class="code-editor" spellcheck="false"></textarea>
+						<textarea id="sourceEditor" class="code-editor" spellcheck="false" disabled></textarea>
+						<div id="editorLockOverlay" class="editor-lock-overlay">
+							<div class="start-test-panel">
+								<strong>Ready to begin?</strong>
+								<span>The editor unlocks and the 20-minute timer starts when you begin the test.</span>
+								<button id="startTestButton" class="start-test-button" type="button" disabled>Start Test</button>
+							</div>
+						</div>
 					</div>
 
 					<div id="validationMessage" class="validation">Workspace initializing.</div>
@@ -698,10 +872,29 @@
 	</div>
 
 	<script>
+		const EXAM_DURATION_SECONDS = 20 * 60;
+		const DEFAULT_CHALLENGE_TITLE = "sum of two numbers";
 		const requestedChallengeId = new URLSearchParams(window.location.search).get("id");
 		let activeChallengeId = null;
 
+		const workspaceState = {
+			timedOut: false,
+			busy: false,
+			testStarted: false,
+			hasTimerStarted: false
+		};
+
+		const timerState = {
+			remainingSeconds: EXAM_DURATION_SECONDS,
+			intervalId: null
+		};
+
 		const dom = {
+			examTimer: document.getElementById("examTimer"),
+			timerDisplay: document.getElementById("timerDisplay"),
+			timerFill: document.getElementById("timerFill"),
+			editorLockOverlay: document.getElementById("editorLockOverlay"),
+			startTestButton: document.getElementById("startTestButton"),
 			workspaceStatus: document.getElementById("workspaceStatus"),
 			challengeSelector: document.getElementById("challengeSelector"),
 			challengeTitle: document.getElementById("challengeTitle"),
@@ -717,10 +910,16 @@
 
 		document.addEventListener("DOMContentLoaded", initializeWorkspace);
 		dom.challengeSelector.addEventListener("change", () => loadChallenge(dom.challengeSelector.value, true));
-		dom.executeButton.addEventListener("click", executeSuite);
+		dom.executeButton.addEventListener("click", () => executeSuite());
+		dom.startTestButton.addEventListener("click", startCodingTest);
 		dom.sourceEditor.addEventListener("input", updateLineRail);
 
 		async function initializeWorkspace() {
+			workspaceState.timedOut = false;
+			workspaceState.testStarted = false;
+			workspaceState.hasTimerStarted = false;
+			resetExamTimer();
+			lockEditorForStart();
 			try {
 				setBusy(true, "Loading Challenge");
 				const challenges = await loadChallengeDirectory();
@@ -759,6 +958,13 @@
 				return requestedChallengeId;
 			}
 
+			const defaultChallenge = challenges.find((challenge) =>
+					String(challenge.title || "").trim().toLowerCase() === DEFAULT_CHALLENGE_TITLE
+			);
+			if (defaultChallenge) {
+				return String(defaultChallenge.id);
+			}
+
 			return String(challenges[0].id);
 		}
 
@@ -787,21 +993,48 @@
 
 			clearConsole();
 			writeConsoleLine("Challenge loaded. Compiler workspace ready.");
-			setValidation("Workspace ready.", "good");
+			setValidation(
+					workspaceState.testStarted ? "Workspace ready." : "Challenge loaded. Press Start Test to unlock the editor.",
+					"good"
+			);
 			setBusy(false, "Ready");
 		}
 
-		async function executeSuite() {
-			const source = dom.sourceEditor.value;
-			if (!source || source.trim().length === 0) {
-				setValidation("Source code cannot be blank.", "warn");
+		async function executeSuite(options = {}) {
+			if (workspaceState.busy) {
+				return;
+			}
+			if (!workspaceState.testStarted && !options.autoSubmit) {
+				setValidation("Press Start Test before executing the suite.", "warn");
+				return;
+			}
+			if (workspaceState.timedOut && !options.autoSubmit) {
 				return;
 			}
 
-			setBusy(true, "Executing");
-			setValidation("Compiler engine running hidden verification suite.", "");
+			const source = dom.sourceEditor.value;
+			if (!source || source.trim().length === 0) {
+				setValidation(
+						options.autoSubmit ? "Time expired with no source code to submit." : "Source code cannot be blank.",
+						options.autoSubmit ? "bad" : "warn"
+				);
+				if (options.autoSubmit) {
+					setBusy(false, "Time Expired");
+				}
+				return;
+			}
+
+			setBusy(true, options.autoSubmit ? "Auto-Submitting" : "Executing");
+			setValidation(
+					options.autoSubmit
+							? "Time expired. Compiler engine is grading the current source."
+							: "Compiler engine running hidden verification suite.",
+					""
+			);
 			clearConsole();
-			writeConsoleLine("Dispatching source to local JavaCompiler service.");
+			writeConsoleLine(options.autoSubmit
+					? "Time expired. Auto-submitting current source to local JavaCompiler service."
+					: "Dispatching source to local JavaCompiler service.");
 
 			try {
 				const response = await fetch("/api/compiler/run", {
@@ -913,6 +1146,26 @@
 
 		function buildStarterSource(challenge) {
 			const title = (challenge.title || "").toLowerCase();
+			if (title.includes("sum of two")) {
+				return `public class Solution {
+    public static String solve(String input) throws Exception {
+        String[] parts = input.split(",");
+        int first = Integer.parseInt(parts[0].trim());
+        int second = Integer.parseInt(parts[1].trim());
+        return "";
+    }
+}`;
+			}
+
+			if (title.includes("even") && title.includes("odd")) {
+				return `public class Solution {
+    public static String solve(String input) throws Exception {
+        int value = Integer.parseInt(input.trim());
+        return "";
+    }
+}`;
+			}
+
 			if (title.includes("reverse")) {
 				return `public class Solution {
     public static String solve(String input) throws Exception {
@@ -947,9 +1200,107 @@
 			dom.consoleBody.scrollTop = dom.consoleBody.scrollHeight;
 		}
 
+		function lockEditorForStart() {
+			dom.editorLockOverlay.classList.remove("hidden");
+			dom.sourceEditor.disabled = true;
+			dom.executeButton.disabled = true;
+		}
+
+		function startCodingTest() {
+			if (workspaceState.busy || workspaceState.timedOut || workspaceState.testStarted || activeChallengeId === null) {
+				return;
+			}
+
+			workspaceState.testStarted = true;
+			dom.editorLockOverlay.classList.add("hidden");
+			dom.challengeSelector.disabled = true;
+			setBusy(false, "In Progress");
+			setValidation("Test started. Timer is active.", "good");
+			startExamTimerOnce();
+			dom.sourceEditor.focus();
+		}
+
+		function resetExamTimer() {
+			stopExamTimer();
+			timerState.remainingSeconds = EXAM_DURATION_SECONDS;
+			updateExamTimerDisplay();
+		}
+
+		function startExamTimerOnce() {
+			if (workspaceState.hasTimerStarted || workspaceState.timedOut || !workspaceState.testStarted) {
+				return;
+			}
+
+			workspaceState.hasTimerStarted = true;
+			startExamTimer();
+		}
+
+		function startExamTimer() {
+			stopExamTimer();
+			timerState.remainingSeconds = EXAM_DURATION_SECONDS;
+			updateExamTimerDisplay();
+			timerState.intervalId = window.setInterval(() => {
+				timerState.remainingSeconds = Math.max(timerState.remainingSeconds - 1, 0);
+				updateExamTimerDisplay();
+				if (timerState.remainingSeconds === 0) {
+					stopExamTimer();
+					handleExamTimerExpired();
+				}
+			}, 1000);
+		}
+
+		function stopExamTimer() {
+			if (timerState.intervalId !== null) {
+				window.clearInterval(timerState.intervalId);
+				timerState.intervalId = null;
+			}
+		}
+
+		function updateExamTimerDisplay() {
+			const remaining = Math.max(timerState.remainingSeconds, 0);
+			const percentRemaining = (remaining / EXAM_DURATION_SECONDS) * 100;
+			dom.timerDisplay.textContent = formatTimerValue(remaining);
+			dom.timerFill.style.width = `${percentRemaining}%`;
+			dom.examTimer.classList.toggle("warning", remaining <= 5 * 60 && remaining > 60);
+			dom.examTimer.classList.toggle("critical", remaining <= 60);
+		}
+
+		function formatTimerValue(totalSeconds) {
+			const minutes = Math.floor(totalSeconds / 60);
+			const seconds = totalSeconds % 60;
+			return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+		}
+
+		async function handleExamTimerExpired() {
+			if (workspaceState.timedOut) {
+				return;
+			}
+
+			workspaceState.timedOut = true;
+			dom.sourceEditor.disabled = true;
+			dom.executeButton.disabled = true;
+			dom.challengeSelector.disabled = true;
+			dom.workspaceStatus.textContent = "Time Expired";
+			dom.consoleStatus.textContent = "Auto-Submitting";
+			setValidation("Time expired. Auto-submitting the current source.", "bad");
+			if (workspaceState.busy) {
+				setValidation("Time expired. The active compiler run is locked as the final submission.", "bad");
+				return;
+			}
+			writeConsoleLine("Time expired. Auto-submitting the current source.");
+			await executeSuite({ autoSubmit: true });
+		}
+
 		function setBusy(isBusy, label) {
-			dom.executeButton.disabled = isBusy;
-			dom.sourceEditor.disabled = isBusy;
+			workspaceState.busy = isBusy;
+			const controlsLocked = isBusy || workspaceState.timedOut || !workspaceState.testStarted;
+			dom.executeButton.disabled = controlsLocked;
+			dom.sourceEditor.disabled = controlsLocked;
+			dom.startTestButton.disabled = isBusy
+					|| workspaceState.timedOut
+					|| workspaceState.testStarted
+					|| activeChallengeId === null;
+			dom.challengeSelector.disabled = isBusy || workspaceState.testStarted || workspaceState.timedOut;
 			dom.workspaceStatus.textContent = label;
 			dom.consoleStatus.textContent = label;
 		}

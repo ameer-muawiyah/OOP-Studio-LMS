@@ -21,6 +21,10 @@
 * **Secure Exam Locking:** The workspace is locked behind a "Start Test" explicit consent button, ensuring fair testing environments.
 * **Pre-loaded Lab Tasks:** Features beginner-friendly lab concepts (e.g., *Sum of Two Numbers*, *Even or Odd*, *Factorials*) complete with automated test case validation.
 
+### 🧑‍🎓 Interactive Student Dashboard
+* **Personalized Hub:** Secure student login routing to a dedicated dashboard displaying the student's name and their dynamically mapped academic supervisor.
+* **Exam History Widget:** Real-time fetching of past exam scores and code runner completions using Spring Data JPA, allowing students to track their proficiency over time.
+
 ### 📊 Professor Command Center
 * **Supervisor Dashboard:** A secure login portal where professors can view real-time data rows of their assigned students.
 * **Instant Roster Sync:** Built using a hybrid Thymeleaf and REST API flow to dynamically update student-to-teacher mappings.
@@ -75,13 +79,13 @@ Open any modern web browser and navigate to: http://localhost:8080
 
     Lms/
     ├── src/main/java/.../
-    │   ├── controllers/      # Spring MVC routing & REST endpoints
+    │   ├── controllers/      # Spring MVC routing (StudentController, InstructorController)
     │   ├── models/           # Database entity classes (User, QuizResult)
     │   ├── repositories/     # Spring Data JPA interfaces
     │   └── services/         # Business logic & Code Execution engine
     ├── src/main/resources/
     │   ├── static/           # Custom CSS, Client-side JS, Images
-    │   ├── templates/        # Thymeleaf HTML views (practice.html, etc.)
+    │   ├── templates/        # Thymeleaf HTML views (student-dashboard.html, practice.html, etc.)
     │   └── application-template.properties # System & Database configurations
 
 ---

@@ -22,6 +22,8 @@ public interface QuizResultRepository extends JpaRepository<QuizResult, Long> {
 
 	List<QuizResult> findTop10ByStudentIdOrderByIdDesc(Long studentId);
 
+	List<QuizResult> findTop5ByStudentIdOrderByCompletedAtDesc(Long studentId);
+
 	@Query("""
 			select coalesce(avg(result.score), 0)
 			from QuizResult result

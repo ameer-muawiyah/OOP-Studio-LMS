@@ -71,7 +71,7 @@ public class SecurityConfig {
 					.map(GrantedAuthority::getAuthority)
 					.anyMatch("ROLE_TEACHER"::equals);
 
-			String targetPath = isTeacher ? "/instructor/dashboard" : "/practice";
+			String targetPath = isTeacher ? "/instructor/dashboard" : "/student/dashboard";
 			response.sendRedirect(request.getContextPath() + targetPath);
 		}
 	}

@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OOP Studio | Student Dashboard</title>
+	<meta name="description" content="Your personalized OOP Studio student dashboard. Track your exam history, view your supervisor, and launch practice sessions.">
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+
+		:root {
+			color-scheme: dark;
+			--bg:              #0b0f0e;
+			--panel:           #111815;
+			--panel-soft:      #0e1210;
+			--line:            #1f2b27;
+			--line-strong:     #2c3d38;
+			--text:            #eef2f0;
+			--muted:           #7a9490;
+			--emerald:         #10b981;
+			--emerald-bright:  #34d399;
+			--emerald-dim:     #059669;
+			--emerald-soft:    rgba(16, 185, 129, 0.12);
+			--emerald-glow:    rgba(16, 185, 129, 0.28);
+			--amber:           #f59e0b;
+			--amber-soft:      rgba(245, 158, 11, 0.12);
+			--amber-bright:    #fbbf24;
+			--red-soft:        rgba(239, 68, 68, 0.12);
+			--red-bright:      #f87171;
+			--shadow-sm:       0 2px 12px rgba(0, 0, 0, 0.32);
+			--shadow:          0 20px 64px rgba(0, 0, 0, 0.48);
+			--radius:          10px;
+			font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		}
+
+		*, *::before, *::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		body {
+			min-height: 100vh;
+			background:
+				radial-gradient(ellipse 80% 50% at 10% -10%, rgba(16, 185, 129, 0.07), transparent),
+				radial-gradient(ellipse 60% 40% at 90% 110%, rgba(16, 185, 129, 0.05), transparent),
+				linear-gradient(180deg, #0d1210 0%, var(--bg) 60%, #080b0a 100%);
+			color: var(--text);
+		}
+
+		/* ── Layout shell ─────────────────────────────────────────────────────── */
+
+		.shell {
+			width: min(1160px, calc(100vw - 32px));
+			margin: 0 auto;
+			padding: 28px 0 56px;
+			display: grid;
+			gap: 20px;
+			align-content: start;
+		}
+
+		/* ── Top navigation bar ───────────────────────────────────────────────── */
+
+		.topbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			padding: 14px 20px;
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			background: rgba(17, 24, 21, 0.92);
+			backdrop-filter: blur(8px);
+			box-shadow: var(--shadow-sm);
+		}
+
+		.topbar-brand {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			text-decoration: none;
+		}
+
+		.brand-dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: var(--emerald);
+			box-shadow: 0 0 14px var(--emerald-glow);
+			animation: pulse 2.4s ease-in-out infinite;
+		}
+
+		@keyframes pulse {
+			0%, 100% { opacity: 1; transform: scale(1); }
+			50%       { opacity: 0.6; transform: scale(0.85); }
+		}
+
+		.brand-label {
+			font-size: 0.85rem;
+			font-weight: 700;
+			color: var(--emerald-bright);
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+		}
+
+		.topbar-actions {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			flex-wrap: wrap;
+		}
+
+		.nav-link {
+			display: inline-flex;
+			align-items: center;
+			min-height: 34px;
+			padding: 6px 14px;
+			border: 1px solid var(--line-strong);
+			border-radius: 8px;
+			background: transparent;
+			color: var(--muted);
+			font-size: 0.78rem;
+			font-weight: 700;
+			text-decoration: none;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+			white-space: nowrap;
+		}
+
+		.nav-link:hover {
+			border-color: var(--emerald-dim);
+			color: var(--emerald-bright);
+			background: var(--emerald-soft);
+		}
+
+		.nav-link.primary {
+			border-color: rgba(16, 185, 129, 0.6);
+			color: var(--emerald-bright);
+			background: var(--emerald-soft);
+		}
+
+		.nav-link.primary:hover {
+			background: rgba(16, 185, 129, 0.2);
+			border-color: var(--emerald);
+		}
+
+		/* ── Hero welcome header ──────────────────────────────────────────────── */
+
+		.hero {
+			position: relative;
+			overflow: hidden;
+			padding: 36px 36px 32px;
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			background: var(--panel);
+			box-shadow: var(--shadow);
+		}
+
+		/* Decorative background glow */
+		.hero::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background:
+				radial-gradient(ellipse 55% 70% at -5% 50%, rgba(16, 185, 129, 0.1), transparent),
+				radial-gradient(ellipse 35% 50% at 105% 0%, rgba(16, 185, 129, 0.06), transparent);
+			pointer-events: none;
+		}
+
+		/* Glowing left accent bar */
+		.hero::after {
+			content: '';
+			position: absolute;
+			inset: 0 auto 0 0;
+			width: 3px;
+			background: linear-gradient(180deg, var(--emerald-bright), var(--emerald-dim));
+			box-shadow: 0 0 24px rgba(16, 185, 129, 0.56);
+			border-radius: 0 2px 2px 0;
+		}
+
+		.hero-inner {
+			position: relative;
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: 24px;
+			flex-wrap: wrap;
+		}
+
+		.hero-text h1 {
+			font-size: clamp(1.6rem, 3.2vw, 2.5rem);
+			font-weight: 900;
+			line-height: 1.15;
+			letter-spacing: -0.02em;
+			background: linear-gradient(135deg, var(--text) 0%, var(--emerald-bright) 120%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+			margin-bottom: 6px;
+		}
+
+		.hero-text .subtitle {
+			font-size: 0.92rem;
+			color: var(--muted);
+			margin-bottom: 20px;
+		}
+
+		.badge-row {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			flex-wrap: wrap;
+		}
+
+		/* Supervisor badge */
+		.supervisor-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			min-height: 36px;
+			padding: 8px 14px;
+			border-radius: 8px;
+			font-size: 0.82rem;
+			font-weight: 700;
+			white-space: nowrap;
+			transition: box-shadow 200ms ease;
+		}
+
+		.supervisor-badge.assigned {
+			border: 1px solid rgba(16, 185, 129, 0.5);
+			background: var(--emerald-soft);
+			color: var(--emerald-bright);
+		}
+
+		.supervisor-badge.pending {
+			border: 1px solid rgba(245, 158, 11, 0.5);
+			background: var(--amber-soft);
+			color: var(--amber-bright);
+		}
+
+		.supervisor-badge .badge-icon {
+			font-size: 1rem;
+			line-height: 1;
+		}
+
+		/* Role chip */
+		.role-chip {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			min-height: 36px;
+			padding: 8px 14px;
+			border: 1px solid var(--line-strong);
+			border-radius: 8px;
+			background: rgba(255,255,255,0.03);
+			color: var(--muted);
+			font-size: 0.8rem;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			white-space: nowrap;
+		}
+
+		/* Hero stat strip */
+		.hero-stat-strip {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-end;
+			gap: 6px;
+		}
+
+		.hero-stat {
+			text-align: right;
+		}
+
+		.hero-stat .hs-label {
+			font-size: 0.72rem;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+			color: var(--muted);
+		}
+
+		.hero-stat .hs-value {
+			font-size: 2.2rem;
+			font-weight: 900;
+			line-height: 1;
+			color: var(--emerald-bright);
+		}
+
+		.hero-stat .hs-suffix {
+			font-size: 0.85rem;
+			font-weight: 600;
+			color: var(--muted);
+			margin-left: 2px;
+		}
+
+		/* ── Quick action cards ───────────────────────────────────────────────── */
+
+		.action-grid {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 16px;
+		}
+
+		.action-card {
+			position: relative;
+			overflow: hidden;
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+			padding: 24px;
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			background: var(--panel);
+			text-decoration: none;
+			color: var(--text);
+			transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+			box-shadow: var(--shadow-sm);
+		}
+
+		.action-card::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: radial-gradient(ellipse 80% 60% at 50% 110%, var(--emerald-soft), transparent);
+			opacity: 0;
+			transition: opacity 250ms ease;
+			pointer-events: none;
+		}
+
+		.action-card:hover {
+			border-color: rgba(16, 185, 129, 0.5);
+			transform: translateY(-2px);
+			box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.15);
+		}
+
+		.action-card:hover::before {
+			opacity: 1;
+		}
+
+		.action-card-icon {
+			font-size: 2rem;
+			line-height: 1;
+		}
+
+		.action-card h3 {
+			font-size: 1.05rem;
+			font-weight: 800;
+			letter-spacing: -0.01em;
+		}
+
+		.action-card p {
+			font-size: 0.85rem;
+			color: var(--muted);
+			line-height: 1.5;
+			flex: 1;
+		}
+
+		.action-card-arrow {
+			align-self: flex-start;
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 6px 12px;
+			border: 1px solid rgba(16, 185, 129, 0.45);
+			border-radius: 6px;
+			background: var(--emerald-soft);
+			color: var(--emerald-bright);
+			font-size: 0.76rem;
+			font-weight: 800;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			transition: background 180ms ease, border-color 180ms ease;
+		}
+
+		.action-card:hover .action-card-arrow {
+			background: rgba(16, 185, 129, 0.22);
+			border-color: var(--emerald);
+		}
+
+		/* ── Exam history panel ───────────────────────────────────────────────── */
+
+		.history-panel {
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			background: var(--panel);
+			overflow: hidden;
+			box-shadow: var(--shadow-sm);
+		}
+
+		.history-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+			padding: 18px 24px;
+			border-bottom: 1px solid var(--line);
+			background: var(--panel-soft);
+		}
+
+		.history-header-left {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.history-header h2 {
+			font-size: 1rem;
+			font-weight: 800;
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+			color: var(--text);
+		}
+
+		.live-chip {
+			display: inline-flex;
+			align-items: center;
+			gap: 7px;
+			padding: 5px 11px;
+			border: 1px solid rgba(16, 185, 129, 0.45);
+			border-radius: 6px;
+			background: var(--emerald-soft);
+			color: var(--emerald-bright);
+			font-size: 0.72rem;
+			font-weight: 900;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			white-space: nowrap;
+		}
+
+		.live-chip::before {
+			content: '';
+			width: 7px;
+			height: 7px;
+			border-radius: 50%;
+			background: var(--emerald);
+			box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+		}
+
+		/* Responsive table wrapper */
+		.table-scroll {
+			overflow-x: auto;
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			min-width: 600px;
+		}
+
+		th, td {
+			padding: 14px 20px;
+			border-bottom: 1px solid var(--line);
+			text-align: left;
+			vertical-align: middle;
+		}
+
+		th {
+			font-size: 0.72rem;
+			font-weight: 900;
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+			color: var(--muted);
+			background: var(--panel-soft);
+			white-space: nowrap;
+		}
+
+		td {
+			font-size: 0.92rem;
+			color: #c8d8d2;
+		}
+
+		tr:last-child td {
+			border-bottom: none;
+		}
+
+		tr:hover td {
+			background: rgba(16, 185, 129, 0.04);
+		}
+
+		/* Score pill */
+		.score-pill {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 52px;
+			min-height: 28px;
+			padding: 4px 10px;
+			border-radius: 999px;
+			font-size: 0.82rem;
+			font-weight: 900;
+		}
+
+		.score-pill.high {
+			border: 1px solid rgba(16, 185, 129, 0.5);
+			background: var(--emerald-soft);
+			color: var(--emerald-bright);
+		}
+
+		.score-pill.mid {
+			border: 1px solid rgba(245, 158, 11, 0.5);
+			background: var(--amber-soft);
+			color: var(--amber-bright);
+		}
+
+		.score-pill.low {
+			border: 1px solid rgba(239, 68, 68, 0.4);
+			background: var(--red-soft);
+			color: var(--red-bright);
+		}
+
+		/* Difficulty pill */
+		.diff-pill {
+			display: inline-flex;
+			align-items: center;
+			min-height: 28px;
+			padding: 4px 10px;
+			border: 1px solid var(--line-strong);
+			border-radius: 6px;
+			background: rgba(255,255,255,0.03);
+			color: #9ab3ad;
+			font-size: 0.76rem;
+			font-weight: 800;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+		}
+
+		/* Timestamp */
+		.timestamp {
+			font-size: 0.8rem;
+			color: var(--muted);
+			white-space: nowrap;
+		}
+
+		/* Empty state */
+		.empty-state {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 10px;
+			padding: 52px 24px;
+			text-align: center;
+		}
+
+		.empty-state .empty-icon {
+			font-size: 2.4rem;
+			opacity: 0.5;
+		}
+
+		.empty-state p {
+			font-size: 0.9rem;
+			color: var(--muted);
+			max-width: 320px;
+			line-height: 1.55;
+		}
+
+		.empty-state a {
+			display: inline-flex;
+			align-items: center;
+			margin-top: 4px;
+			padding: 8px 18px;
+			border: 1px solid rgba(16, 185, 129, 0.5);
+			border-radius: 8px;
+			background: var(--emerald-soft);
+			color: var(--emerald-bright);
+			font-size: 0.82rem;
+			font-weight: 800;
+			text-decoration: none;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			transition: background 160ms ease;
+		}
+
+		.empty-state a:hover {
+			background: rgba(16, 185, 129, 0.22);
+		}
+
+		/* ── Responsive ───────────────────────────────────────────────────────── */
+
+		@media (max-width: 720px) {
+			.hero {
+				padding: 28px 24px 24px;
+			}
+
+			.hero-inner {
+				flex-direction: column;
+			}
+
+			.hero-stat-strip {
+				align-items: flex-start;
+			}
+
+			.hero-stat {
+				text-align: left;
+			}
+
+			.action-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.topbar-actions .nav-link:not(.primary) {
+				display: none;
+			}
+		}
+	</style>
+</head>
+<body>
+<div class="shell">
+
+	<!-- ═══ Top navigation bar ═══════════════════════════════════════════════ -->
+	<nav class="topbar" aria-label="Student navigation">
+		<a class="topbar-brand" href="/student/dashboard">
+			<span class="brand-dot" aria-hidden="true"></span>
+			<span class="brand-label">OOP Studio</span>
+		</a>
+		<div class="topbar-actions">
+			<a class="nav-link" href="/practice">Adaptive MCQ</a>
+			<a class="nav-link" href="/code-practice">Code Practice</a>
+			<a class="nav-link primary" href="/logout">Sign Out</a>
+		</div>
+	</nav>
+
+	<!-- ═══ Hero welcome header ══════════════════════════════════════════════ -->
+	<header class="hero" aria-label="Student welcome">
+		<div class="hero-inner">
+			<div class="hero-text">
+				<h1 th:text="'Welcome back, ' + ${studentName} + '!'">Welcome back, Student!</h1>
+				<p class="subtitle">Your personal learning hub — track your progress and launch new sessions.</p>
+
+				<div class="badge-row">
+					<!-- Supervisor badge — colour-coded by assignment status -->
+					<span id="supervisorBadge"
+					      class="supervisor-badge"
+					      th:classappend="${supervisorPending} ? 'pending' : 'assigned'">
+						<span class="badge-icon" th:text="${supervisorPending} ? '⏳' : '🎓'" aria-hidden="true">🎓</span>
+						<span th:text="'Supervisor: ' + ${supervisorName}">Supervisor: —</span>
+					</span>
+
+					<!-- Role indicator -->
+					<span class="role-chip">
+						<span aria-hidden="true">🎓</span>
+						Student
+					</span>
+				</div>
+			</div>
+
+			<!-- Accuracy callout — shown only when there are recorded results -->
+			<div class="hero-stat-strip" th:if="${hasResults}">
+				<div class="hero-stat">
+					<div class="hs-label">Recent Accuracy</div>
+					<div>
+						<span class="hs-value" th:text="${overallAccuracy}">—</span>
+					</div>
+					<div class="hs-label" style="margin-top:4px">last 5 sessions</div>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<!-- ═══ Quick-action cards ═══════════════════════════════════════════════ -->
+	<section aria-label="Quick actions">
+		<div class="action-grid">
+
+			<!-- Adaptive MCQ Exam -->
+			<a id="adaptiveExamCard" class="action-card" href="/practice">
+				<div class="action-card-icon" aria-hidden="true">🧠</div>
+				<div>
+					<h3>Adaptive MCQ Exam</h3>
+					<p>Take a 9-question adaptive multiple-choice exam. Difficulty adjusts in real-time based on your performance.</p>
+				</div>
+				<span class="action-card-arrow">Launch Exam →</span>
+			</a>
+
+			<!-- Coding Practice -->
+			<a id="codePracticeCard" class="action-card" href="/code-practice">
+				<div class="action-card-icon" aria-hidden="true">💻</div>
+				<div>
+					<h3>Coding Practice</h3>
+					<p>Solve OOP coding challenges in the browser-based editor. Write, run, and debug Java code without leaving the page.</p>
+				</div>
+				<span class="action-card-arrow">Open Editor →</span>
+			</a>
+
+		</div>
+	</section>
+
+	<!-- ═══ Recent exam history widget ═══════════════════════════════════════ -->
+	<section class="history-panel" aria-label="Recent exam history">
+
+		<div class="history-header">
+			<div class="history-header-left">
+				<h2>Recent Exam History</h2>
+				<span class="live-chip">Last 5 Sessions</span>
+			</div>
+		</div>
+
+		<!-- Results table — rendered when history exists -->
+		<div class="table-scroll" th:if="${hasResults}">
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">Score</th>
+						<th scope="col">Total Questions</th>
+						<th scope="col">Accuracy</th>
+						<th scope="col">Ending Difficulty</th>
+						<th scope="col">Completed</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="result : ${recentResults}">
+						<!-- Score pill — colour tier: ≥70 high, ≥40 mid, else low -->
+						<td>
+							<span class="score-pill"
+							      th:classappend="${(result.score != null and result.totalQuestions != null and result.totalQuestions > 0)
+							                       ? ((result.score * 100 / result.totalQuestions) >= 70 ? ' high'
+							                          : (result.score * 100 / result.totalQuestions) >= 40 ? ' mid' : ' low')
+							                       : ' mid'}"
+							      th:text="${result.score != null ? result.score : '—'}">0</span>
+						</td>
+						<td th:text="${result.totalQuestions != null ? result.totalQuestions : '—'}">0</td>
+						<!-- Per-session accuracy % -->
+						<td th:text="${(result.score != null and result.totalQuestions != null and result.totalQuestions > 0)
+						               ? #numbers.formatDecimal(result.score * 100.0 / result.totalQuestions, 1, 1) + '%'
+						               : '—'}">—</td>
+						<td>
+							<span class="diff-pill"
+							      th:text="${result.difficultyReached != null ? result.difficultyReached : '—'}">MEDIUM</span>
+						</td>
+						<td class="timestamp"
+						    th:text="${result.completedAt != null
+						               ? #temporals.format(result.completedAt, 'dd MMM yyyy, HH:mm')
+						               : '—'}">01 Jan 2026, 00:00</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!-- Empty state — rendered when no history exists -->
+		<div class="empty-state" th:if="${!hasResults}">
+			<span class="empty-icon" aria-hidden="true">📋</span>
+			<p>You haven't completed any adaptive exam sessions yet. Start your first exam to see your results here.</p>
+			<a id="startFirstExamLink" href="/practice">Start Your First Exam →</a>
+		</div>
+
+	</section>
+
+</div>
+</body>
+</html>
